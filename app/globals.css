@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------
+ * Mintfolio — Semantic theme tokens
+ * Brand palette: Olive Garden Feast (see docs/design-system.md)
+ * Values are space-separated RGB triplets so Tailwind's
+ * `<alpha-value>` syntax works (e.g. `bg-primary/50`).
+ * ------------------------------------------------------------- */
+
+@layer base {
+  :root {
+    /* Surfaces */
+    --background: 254 250 224;       /* cornsilk-100 */
+    --surface: 255 255 255;          /* paper white */
+    --surface-muted: 252 243 189;    /* cornsilk-200 */
+
+    /* Text */
+    --foreground: 40 54 24;          /* forest-900 */
+    --foreground-muted: 56 74 44;    /* forest-700 */
+    --foreground-subtle: 93 119 71;  /* forest-500 */
+
+    /* Lines */
+    --border: 233 224 175;           /* cornsilk-300 mixed */
+    --border-strong: 179 192 121;    /* olive-300 */
+    --ring: 148 165 83;              /* olive-400 */
+
+    /* Brand */
+    --primary: 96 108 56;            /* olive-600 */
+    --primary-foreground: 254 250 224;
+
+    --accent: 188 108 37;            /* copper-600 */
+    --accent-foreground: 254 250 224;
+
+    --secondary: 221 161 94;         /* caramel-400 */
+    --secondary-foreground: 40 54 24;
+
+    /* States */
+    --success: 96 108 56;            /* olive-600 (profit reuses brand) */
+    --success-foreground: 254 250 224;
+
+    --destructive: 160 70 50;        /* terracotta */
+    --destructive-foreground: 254 250 224;
+
+    /* shadcn compatibility */
+    --radius: 0.625rem;              /* 10px — matches radius-md */
+  }
+
+  .dark {
+    --background: 40 54 24;          /* forest-900 */
+    --surface: 47 61 38;             /* forest-800 */
+    --surface-muted: 56 74 44;       /* forest-700 */
+
+    --foreground: 254 250 224;       /* cornsilk-100 */
+    --foreground-muted: 207 212 192;
+    --foreground-subtle: 154 176 129;
+
+    --border: 56 74 44;              /* forest-700 */
+    --border-strong: 122 148 94;     /* forest-400 / olive-ish */
+    --ring: 179 192 121;             /* olive-300 */
+
+    --primary: 148 165 83;           /* olive-400 — lifts off dark bg */
+    --primary-foreground: 40 54 24;
+
+    --accent: 220 139 58;            /* copper-400 */
+    --accent-foreground: 40 54 24;
+
+    --secondary: 209 135 55;         /* caramel-500 */
+    --secondary-foreground: 40 54 24;
+
+    --success: 148 165 83;
+    --success-foreground: 40 54 24;
+
+    --destructive: 194 90 63;
+    --destructive-foreground: 254 250 224;
+  }
+
+  /* Element-level defaults */
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11"; /* Inter stylistic alternates */
+  }
+
+  /* Tabular figures wherever a number is rendered for finance */
+  .num,
+  td.num,
+  [data-num] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Focus rings — visible, on-brand, never removed */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Honor user motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 50ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 50ms !important;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------
+ * Project utilities
+ * ------------------------------------------------------------- */
+
+@layer utilities {
+  /* True minus sign for negative deltas (more legible than hyphen-minus). */
+  .minus::before {
+    content: "\2212";
+    margin-right: 0.05em;
+  }
+
+  /* Slight inset shadow used on hero cards / metric tiles to add depth
+     without competing with the soft shadow above. */
+  .ring-inset-soft {
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+  }
+}
