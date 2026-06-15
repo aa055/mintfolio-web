@@ -1,7 +1,15 @@
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AuthForm } from "@/components/auth/auth-form";
+import { GoogleButton } from "@/components/auth/google-button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { signupAction } from "@/lib/auth/actions";
 
 export default function SignupPage() {
   return (
@@ -15,23 +23,40 @@ export default function SignupPage() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="rounded-md border border-border bg-surface-muted px-4 py-3 text-body-sm text-foreground-muted">
-          Supabase Auth wiring coming next — this page is a placeholder so the
-          design system has somewhere to land.
-        </p>
-        <Button variant="accent" className="w-full" disabled>
-          Continue with Google
-        </Button>
-        <Button variant="outline" className="w-full" disabled>
-          Continue with email
-        </Button>
+        <GoogleButton label="Sign up with Google" />
+
+        <Divider>or</Divider>
+
+        <AuthForm
+          action={signupAction}
+          submitLabel="Create account"
+          variant="accent"
+          passwordHint="At least 8 characters."
+          passwordMinLength={8}
+        />
+
         <p className="text-center text-caption text-foreground-muted">
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-primary hover:underline">
+          <Link
+            href="/login"
+            className="font-medium text-primary hover:underline"
+          >
             Sign in
           </Link>
         </p>
       </CardContent>
     </Card>
+  );
+}
+
+function Divider({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative flex items-center">
+      <div className="flex-1 border-t border-border" />
+      <span className="px-3 text-micro font-semibold uppercase tracking-wider text-foreground-subtle">
+        {children}
+      </span>
+      <div className="flex-1 border-t border-border" />
+    </div>
   );
 }
