@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ReceiptStrip } from "@/components/purchases/receipt-strip";
 import { ApiError, apiFetch } from "@/lib/api-client";
 import type {
   Holding,
@@ -175,6 +176,8 @@ function PurchaseList({ purchases }: { purchases: Purchase[] }) {
                 />
               ))}
             </ul>
+
+            <ReceiptStrip files={p.files} />
           </CardContent>
         </Card>
       ))}

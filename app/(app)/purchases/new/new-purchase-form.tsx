@@ -1,12 +1,20 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Trash2, ArrowLeft, CircleAlert } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  ArrowLeft,
+  CircleAlert,
+  Paperclip,
+  ReceiptText,
+  X,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,7 +29,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createPurchaseAction } from "@/lib/purchases/actions";
-import type { PurchaseCreatePayload } from "@/lib/api-types";
+import {
+  registerFileAction,
+  signUploadAction,
+} from "@/lib/purchases/file-actions";
+import type {
+  FileMimeType,
+  PurchaseCreatePayload,
+} from "@/lib/api-types";
 
 // ---------------------------------------------------------------
 // Schema
@@ -133,10 +148,20 @@ function checkItemMath(
 // Component
 // ---------------------------------------------------------------
 
+const ALLOWED_MIME_TYPES = new Set<string>([
+  "image/jpeg",
+  "image/png",
+  "application/pdf",
+]);
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+
 export function NewPurchaseForm({ portfolioId }: { portfolioId: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [statusLabel, setStatusLabel] = useState<string | null>(null);
+  const [receipts, setReceipts] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -164,6 +189,34 @@ export function NewPurchaseForm({ portfolioId }: { portfolioId: string }) {
     (sum, item) => sum + (Number(item.purchase_price) || 0),
     0,
   );
+
+  function pickReceipts(files: FileList | null) {
+    if (!files) return;
+    const accepted: File[] = [];
+    const rejections: string[] = [];
+    for (const f of Array.from(files)) {
+      if (!ALLOWED_MIME_TYPES.has(f.type)) {
+        rejections.push(`${f.name}: type ${f.type || "?"} not allowed`);
+        continue;
+      }
+      if (f.size > MAX_FILE_SIZE_BYTES) {
+        rejections.push(`${f.name}: ${(f.size / 1024 / 1024).toFixed(1)} MB > 5 MB limit`);
+        continue;
+      }
+      accepted.push(f);
+    }
+    if (rejections.length) {
+      setSubmitError(rejections.join(" · "));
+    } else {
+      setSubmitError(null);
+    }
+    setReceipts((prev) => [...prev, ...accepted]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function removeReceipt(idx: number) {
+    setReceipts((prev) => prev.filter((_, i) => i !== idx));
+  }
 
   function onSubmit(values: FormValues) {
     setSubmitError(null);
@@ -196,12 +249,62 @@ export function NewPurchaseForm({ portfolioId }: { portfolioId: string }) {
     };
 
     startTransition(async () => {
+      setStatusLabel("Saving purchase…");
       const result = await createPurchaseAction(portfolioId, payload);
-      if (result.ok) {
-        router.push("/dashboard");
-      } else {
+      if (!result.ok) {
         setSubmitError(result.error);
+        setStatusLabel(null);
+        return;
       }
+
+      const purchaseId = result.purchase.id;
+      const failed: string[] = [];
+
+      for (let i = 0; i < receipts.length; i++) {
+        const file = receipts[i];
+        setStatusLabel(`Uploading receipt ${i + 1} of ${receipts.length}…`);
+        try {
+          const sig = await signUploadAction(purchaseId, {
+            filename: file.name,
+            mime_type: file.type as FileMimeType,
+            size_bytes: file.size,
+          });
+          if (!sig.ok) throw new Error(sig.error);
+
+          const put = await fetch(sig.data.upload_url, {
+            method: "PUT",
+            headers: { "Content-Type": file.type },
+            body: file,
+          });
+          if (!put.ok) {
+            const errBody = await put.text();
+            throw new Error(`Storage PUT ${put.status}: ${errBody.slice(0, 120)}`);
+          }
+
+          const reg = await registerFileAction(purchaseId, {
+            storage_path: sig.data.storage_path,
+            filename: file.name,
+            mime_type: file.type as FileMimeType,
+            size_bytes: file.size,
+          });
+          if (!reg.ok) throw new Error(reg.error);
+        } catch (err) {
+          failed.push(`${file.name}: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
+
+      setStatusLabel(null);
+      if (failed.length) {
+        // Purchase saved, some receipts didn't — let the user retry from dashboard.
+        setSubmitError(
+          `Purchase saved, but ${failed.length} receipt${failed.length === 1 ? "" : "s"} failed: ` +
+            failed.join(" · "),
+        );
+        setTimeout(() => router.push("/dashboard"), 2500);
+        return;
+      }
+
+      router.push("/dashboard");
     });
   }
 
@@ -507,6 +610,80 @@ export function NewPurchaseForm({ portfolioId }: { portfolioId: string }) {
         </Button>
       </section>
 
+      {/* ---------- Receipts ---------- */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-h3 font-semibold text-foreground">Receipts</h2>
+          <p className="text-caption text-foreground-muted">
+            JPG, PNG, or PDF · up to 5 MB each
+          </p>
+        </div>
+        <Card>
+          <CardContent className="space-y-4 p-6">
+            <div className="rounded-md border border-dashed border-border-strong bg-cornsilk-50 p-6 text-center">
+              <span className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-cornsilk-200 text-foreground-muted">
+                <Paperclip className="h-5 w-5" strokeWidth={1.75} />
+              </span>
+              <p className="mt-3 text-body-sm text-foreground">
+                Attach receipts for this order
+              </p>
+              <p className="mt-1 text-caption text-foreground-muted">
+                One per file. They&apos;ll upload after the purchase saves.
+              </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/jpeg,image/png,application/pdf"
+                className="hidden"
+                onChange={(e) => pickReceipts(e.target.files)}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Plus />
+                Choose files
+              </Button>
+            </div>
+
+            {receipts.length > 0 ? (
+              <ul className="space-y-2">
+                {receipts.map((file, idx) => (
+                  <li
+                    key={`${file.name}-${idx}`}
+                    className="flex items-center justify-between rounded-md border border-border bg-surface px-3 py-2"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <ReceiptText className="h-4 w-4 shrink-0 text-foreground-muted" />
+                      <div className="min-w-0">
+                        <p className="truncate text-body-sm text-foreground">
+                          {file.name}
+                        </p>
+                        <p className="text-caption text-foreground-subtle num">
+                          {(file.size / 1024).toFixed(0)} KB · {file.type}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeReceipt(idx)}
+                    >
+                      <X />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </CardContent>
+        </Card>
+      </section>
+
       {/* ---------- Submit ---------- */}
       {submitError ? (
         <p
@@ -517,7 +694,12 @@ export function NewPurchaseForm({ portfolioId }: { portfolioId: string }) {
         </p>
       ) : null}
 
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      <div className="flex flex-col-reverse items-stretch gap-3 sm:flex-row sm:items-center sm:justify-end">
+        {statusLabel ? (
+          <p className="text-caption text-foreground-muted sm:mr-auto">
+            {statusLabel}
+          </p>
+        ) : null}
         <Button asChild variant="ghost">
           <Link href="/dashboard">Cancel</Link>
         </Button>
