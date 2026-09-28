@@ -45,7 +45,7 @@ The app runs at `http://localhost:3000`.
 
 See [`.env.example`](./.env.example). You'll need:
 
-- `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` — for auth
+- `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — for auth
 - `NEXT_PUBLIC_API_BASE_URL` — the FastAPI base URL (default `http://localhost:8000`)
 
 ---
@@ -85,11 +85,11 @@ docs/
 
 - [x] Project scaffold + design system
 - [x] Marketing landing page
-- [ ] Auth pages (Supabase email + Google OAuth)
-- [ ] Dashboard shell + navigation
-- [ ] Add/edit/delete holding
+- [x] Auth pages (Supabase email + Google OAuth)
+- [x] Dashboard shell + navigation
+- [x] Add purchase (multi-item) — edit/delete pending
 - [ ] Sale flow
-- [ ] Receipt upload (signed URL → Supabase Storage)
+- [x] Receipt upload (signed URL → Supabase Storage)
 - [ ] Portfolio summary widgets
 - [ ] Live + manual price toggle
 - [ ] Holdings table with filters
