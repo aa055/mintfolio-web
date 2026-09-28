@@ -109,6 +109,13 @@ const DEFAULT_ITEM: FormValues["items"][number] = {
 
 const GRAMS_PER_UNIT = { g: 1, kg: 1000, oz: 31.1035 } as const;
 
+/** Today as YYYY-MM-DD in the browser's timezone (toISOString is UTC). */
+function localIsoDate(): string {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 10);
+}
+
 function checkItemMath(
   item: FormValues["items"][number],
   paymentMethod: "cash" | "card",
@@ -166,7 +173,7 @@ export function NewPurchaseForm({ portfolioId }: { portfolioId: string }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      purchase_date: new Date().toISOString().slice(0, 10),
+      purchase_date: localIsoDate(),
       dealer: "",
       purchase_currency: "AED",
       payment_method: "cash",

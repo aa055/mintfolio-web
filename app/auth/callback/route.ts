@@ -35,7 +35,12 @@ export async function GET(request: NextRequest) {
   }
 
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/dashboard";
+  // Only allow same-origin paths — "//host" or "/\host" would leave the site.
+  const rawNext = searchParams.get("next") ?? "/dashboard";
+  const next =
+    rawNext.startsWith("/") && !rawNext.startsWith("//") && !rawNext.startsWith("/\\")
+      ? rawNext
+      : "/dashboard";
 
   if (!code) {
     return NextResponse.redirect(
