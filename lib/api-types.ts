@@ -135,3 +135,45 @@ export interface PurchaseCreatePayload {
   notes?: string | null;
   items: HoldingCreatePayload[];
 }
+
+// ---------------- Prices + summary ----------------
+
+export interface Rate {
+  metal: Metal;
+  rate_per_gram: string;
+  currency: string;
+  source: "goldapi" | "manual";
+  fetched_at: string | null;
+}
+
+export interface MetalSummary {
+  metal: Metal;
+  grams: string;
+  current_value: string;
+  cost_basis: string;
+}
+
+export interface HoldingValue {
+  id: string;
+  current_value: string | null;
+  unrealized_pl: string | null;
+  realized_pl: string | null;
+}
+
+export interface PortfolioSummary {
+  currency: string;
+  pricing_mode: "live" | "manual";
+  rates: Rate[];
+  total_value: string;
+  cost_basis: string;
+  total_invested: string;
+  unrealized_pl: string;
+  unrealized_pl_pct: string | null;
+  realized_pl: string;
+  active_count: number;
+  sold_count: number;
+  unvalued_count: number;
+  other_currency_count: number;
+  by_metal: MetalSummary[];
+  holdings: HoldingValue[];
+}

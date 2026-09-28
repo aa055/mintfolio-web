@@ -9,20 +9,29 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  formatSignedCurrency,
+  PortfolioSummaryView,
+  plTone,
+} from "@/components/dashboard/portfolio-summary";
 import { ReceiptStrip } from "@/components/purchases/receipt-strip";
 import { ApiError, apiFetch } from "@/lib/api-client";
 import type {
   Holding,
+  HoldingValue,
   MeResponse,
+  PortfolioSummary,
   Purchase,
   PurchaseListResponse,
 } from "@/lib/api-types";
-import { formatCurrency, formatWeight } from "@/lib/utils";
+import { cn, formatCurrency, formatWeight } from "@/lib/utils";
 
 export default async function DashboardPage() {
   let me: MeResponse | null = null;
   let purchases: Purchase[] = [];
+  let summary: PortfolioSummary | null = null;
   let syncError: string | null = null;
+  let listError: string | null = null;
 
   try {
     me = await apiFetch<MeResponse>("/auth/me", { method: "GET" });
@@ -43,14 +52,24 @@ export default async function DashboardPage() {
   }
 
   if (me) {
-    try {
-      const list = await apiFetch<PurchaseListResponse>(
-        `/portfolios/${me.portfolio.id}/purchases`,
-        { method: "GET" },
-      );
-      purchases = list.purchases;
-    } catch (err) {
-      syncError = err instanceof Error ? err.message : String(err);
+    // Independent requests: a summary failure shouldn't hide the purchase list.
+    const [list, sum] = await Promise.allSettled([
+      apiFetch<PurchaseListResponse>(`/portfolios/${me.portfolio.id}/purchases`, {
+        method: "GET",
+      }),
+      apiFetch<PortfolioSummary>(`/portfolios/${me.portfolio.id}/summary`, {
+        method: "GET",
+      }),
+    ]);
+    if (list.status === "fulfilled") {
+      purchases = list.value.purchases;
+    } else {
+      listError = errorMessage(list.reason);
+    }
+    if (sum.status === "fulfilled") {
+      summary = sum.value;
+    } else {
+      console.error("[dashboard] summary failed:", sum.reason);
     }
   }
 
@@ -101,13 +120,33 @@ export default async function DashboardPage() {
             </p>
           </CardContent>
         </Card>
+      ) : listError ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-h3 text-destructive">
+              <CircleAlert className="h-5 w-5" />
+              Couldn&apos;t load your purchases
+            </CardTitle>
+            <CardDescription className="text-foreground-muted">{listError}</CardDescription>
+          </CardHeader>
+        </Card>
       ) : purchases.length === 0 ? (
         <EmptyState />
       ) : (
-        <PurchaseList purchases={purchases} />
+        <>
+          {summary ? <PortfolioSummaryView summary={summary} /> : null}
+          <PurchaseList
+            purchases={purchases}
+            values={new Map(summary?.holdings.map((h) => [h.id, h]))}
+          />
+        </>
       )}
     </div>
   );
+}
+
+function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
 }
 
 function EmptyState() {
@@ -134,9 +173,16 @@ function EmptyState() {
   );
 }
 
-function PurchaseList({ purchases }: { purchases: Purchase[] }) {
+function PurchaseList({
+  purchases,
+  values,
+}: {
+  purchases: Purchase[];
+  values: Map<string, HoldingValue>;
+}) {
   return (
     <div className="space-y-4">
+      <h2 className="text-h3 font-semibold text-foreground">Purchases</h2>
       {purchases.map((p) => (
         <Card key={p.id}>
           <CardContent className="p-6">
@@ -173,6 +219,7 @@ function PurchaseList({ purchases }: { purchases: Purchase[] }) {
                   key={item.id}
                   item={item}
                   currency={p.purchase_currency}
+                  value={values.get(item.id)}
                 />
               ))}
             </ul>
@@ -188,10 +235,13 @@ function PurchaseList({ purchases }: { purchases: Purchase[] }) {
 function HoldingRow({
   item,
   currency,
+  value,
 }: {
   item: Holding;
   currency: string;
+  value?: HoldingValue;
 }) {
+  const pl = value?.unrealized_pl ?? value?.realized_pl ?? null;
   const metal = item.metal === "gold" ? "Gold" : "Silver";
   const purity = item.purity ? ` ${item.purity}` : "";
   const form = item.form ? ` ${item.form}` : "";
@@ -209,8 +259,23 @@ function HoldingRow({
           {item.brand ? ` · ${item.brand}` : ""}
         </span>
       </div>
-      <div className="text-body-sm font-medium num text-foreground">
-        {formatCurrency(Number(item.purchase_price), currency)}
+      <div className="text-right text-body-sm num">
+        <div className="font-medium text-foreground">
+          {formatCurrency(Number(item.purchase_price), currency)}
+          {item.status === "sold" ? (
+            <span className="ml-2 text-caption text-foreground-subtle">sold</span>
+          ) : null}
+        </div>
+        {value?.current_value != null ? (
+          <div className="text-caption text-foreground-muted">
+            now {formatCurrency(Number(value.current_value), currency)}
+          </div>
+        ) : null}
+        {pl !== null ? (
+          <div className={cn("text-caption", plTone(Number(pl)))}>
+            {formatSignedCurrency(Number(pl), currency)}
+          </div>
+        ) : null}
       </div>
     </li>
   );

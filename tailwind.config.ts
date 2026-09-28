@@ -115,6 +115,10 @@ const config: Config = {
           DEFAULT: "rgb(var(--secondary) / <alpha-value>)",
           foreground: "rgb(var(--secondary-foreground) / <alpha-value>)",
         },
+        series: {
+          gold: "rgb(var(--series-gold) / <alpha-value>)",
+          silver: "rgb(var(--series-silver) / <alpha-value>)",
+        },
         success: {
           DEFAULT: "rgb(var(--success) / <alpha-value>)",
           foreground: "rgb(var(--success-foreground) / <alpha-value>)",

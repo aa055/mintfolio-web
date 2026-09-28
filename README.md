@@ -90,7 +90,7 @@ docs/
 - [x] Add purchase (multi-item) — edit/delete pending
 - [ ] Sale flow
 - [x] Receipt upload (signed URL → Supabase Storage)
-- [ ] Portfolio summary widgets
+- [x] Portfolio summary widgets (value, P/L, allocation)
 - [ ] Live + manual price toggle
 - [ ] Holdings table with filters
 - [ ] Settings (currency, timezone, pricing mode)

@@ -43,6 +43,10 @@
     --destructive: 160 70 50;        /* terracotta */
     --destructive-foreground: 254 250 224;
 
+    /* Chart series — one fixed hue per metal (CVD-validated pair) */
+    --series-gold: 188 108 37;       /* #bc6c25 copper-600 */
+    --series-silver: 42 120 214;     /* #2a78d6 */
+
     /* shadcn compatibility */
     --radius: 0.625rem;              /* 10px — matches radius-md */
   }
@@ -74,6 +78,9 @@
 
     --destructive: 194 90 63;
     --destructive-foreground: 254 250 224;
+
+    --series-gold: 201 122 46;       /* #c97a2e */
+    --series-silver: 57 135 229;     /* #3987e5 */
   }
 
   /* Element-level defaults */
