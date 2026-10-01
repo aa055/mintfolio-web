@@ -64,3 +64,26 @@ export async function apiFetch<T = unknown>(
 
   return data as T;
 }
+
+/**
+ * Human-readable message for any error thrown by `apiFetch`. FastAPI
+ * validation errors arrive as a list of `{ loc, msg }` — flatten them to
+ * "field: message" instead of dumping JSON at the user.
+ */
+export function apiErrorMessage(err: unknown): string {
+  if (err instanceof ApiError) {
+    const { detail } = err;
+    if (typeof detail === "string") return detail;
+    if (Array.isArray(detail)) {
+      return detail
+        .map((d: { loc?: unknown[]; msg?: string }) => {
+          const field = d.loc?.filter((p) => p !== "body").join(".");
+          const msg = (d.msg ?? "invalid").replace(/^Value error, /, "");
+          return field ? `${field}: ${msg}` : msg;
+        })
+        .join(" · ");
+    }
+    return JSON.stringify(detail);
+  }
+  return err instanceof Error ? err.message : String(err);
+}

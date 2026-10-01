@@ -71,3 +71,10 @@ export function formatWeight(
   const value = unit === "oz" ? grams / 31.1035 : grams;
   return `${value.toFixed(fractionDigits)} ${unit}`;
 }
+
+/** Today as YYYY-MM-DD in the browser's timezone (toISOString alone is UTC). */
+export function todayIsoDate(): string {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 10);
+}

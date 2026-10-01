@@ -57,6 +57,29 @@ export interface Holding {
   comments: string | null;
   created_at: string;
   updated_at: string;
+  sale: Sale | null;
+}
+
+export interface Sale {
+  id: string;
+  sale_price: string;
+  sale_currency: string;
+  sale_date: string;
+  sold_to: string | null;
+  spot_rate_at_sale: string | null;
+  fees: string;
+  comments: string | null;
+  created_at: string;
+}
+
+export interface SaleCreatePayload {
+  sale_price: string;
+  sale_currency: string;
+  sale_date: string;
+  sold_to?: string | null;
+  spot_rate_at_sale?: string | null;
+  fees?: string;
+  comments?: string | null;
 }
 
 export interface Purchase {
@@ -126,6 +149,28 @@ export interface HoldingCreatePayload {
   comments?: string | null;
 }
 
+export interface UserSettingsPayload {
+  display_name?: string | null;
+  preferred_currency?: string;
+  timezone?: string;
+  default_pricing_mode?: "live" | "manual";
+}
+
+export interface ManualRatesPayload {
+  currency: string;
+  gold_rate_per_gram: string | null;
+  silver_rate_per_gram: string | null;
+}
+
+export interface LivePrice {
+  metal: Metal;
+  purity: string;
+  currency: string;
+  rate_per_gram: string;
+  source: "goldapi";
+  fetched_at: string;
+}
+
 export interface PurchaseCreatePayload {
   purchase_date: string;
   dealer?: string | null;
@@ -177,3 +222,7 @@ export interface PortfolioSummary {
   by_metal: MetalSummary[];
   holdings: HoldingValue[];
 }
+
+export type PurchaseUpdatePayload = Omit<PurchaseCreatePayload, "items"> & {
+  items: (HoldingCreatePayload & { id?: string })[];
+};
