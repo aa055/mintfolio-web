@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Coins } from "lucide-react";
+import { Coins, Settings } from "lucide-react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AppLayout({
@@ -36,6 +37,13 @@ export default async function AppLayout({
             <span className="hidden text-caption text-foreground-muted sm:inline">
               {user.email}
             </span>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/settings">
+                <Settings />
+                <span className="hidden sm:inline">Settings</span>
+                <span className="sr-only sm:hidden">Settings</span>
+              </Link>
+            </Button>
             <LogoutButton />
           </nav>
         </div>

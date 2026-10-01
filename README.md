@@ -87,10 +87,10 @@ docs/
 - [x] Marketing landing page
 - [x] Auth pages (Supabase email + Google OAuth)
 - [x] Dashboard shell + navigation
-- [x] Add purchase (multi-item) — edit/delete pending
-- [ ] Sale flow
+- [x] Add / edit / delete purchase (multi-item)
+- [x] Sale flow (record + undo)
 - [x] Receipt upload (signed URL → Supabase Storage)
 - [x] Portfolio summary widgets (value, P/L, allocation)
-- [ ] Live + manual price toggle
+- [x] Live + manual price toggle
 - [ ] Holdings table with filters
-- [ ] Settings (currency, timezone, pricing mode)
+- [x] Settings (currency, timezone, pricing mode, manual rates)

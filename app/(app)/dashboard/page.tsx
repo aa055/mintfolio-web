@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CircleAlert, Plus, ReceiptText } from "lucide-react";
+import { CircleAlert, Pencil, Plus, ReceiptText } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,11 @@ import {
   PortfolioSummaryView,
   plTone,
 } from "@/components/dashboard/portfolio-summary";
+import {
+  DeletePurchaseButton,
+  SellButton,
+  UndoSaleButton,
+} from "@/components/purchases/holding-actions";
 import { ReceiptStrip } from "@/components/purchases/receipt-strip";
 import { ApiError, apiFetch } from "@/lib/api-client";
 import type {
@@ -189,11 +194,7 @@ function PurchaseList({
             <div className="flex flex-col gap-2 border-b border-border pb-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="text-micro font-semibold uppercase tracking-wider text-foreground-subtle">
-                  {new Date(p.purchase_date).toLocaleDateString(undefined, {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
+                  {formatDate(p.purchase_date)}
                 </p>
                 <p className="mt-1 text-h3 font-semibold text-foreground">
                   {p.dealer || "Unknown dealer"}
@@ -205,12 +206,26 @@ function PurchaseList({
                     : "Cash"}
                 </p>
               </div>
-              <p className="font-display text-h2 font-medium tracking-tight num text-foreground sm:text-right">
-                {formatCurrency(
-                  Number(p.total_amount),
-                  p.purchase_currency,
-                )}
-              </p>
+              <div className="flex flex-col gap-2 sm:items-end">
+                <p className="font-display text-h2 font-medium tracking-tight num text-foreground sm:text-right">
+                  {formatCurrency(
+                    Number(p.total_amount),
+                    p.purchase_currency,
+                  )}
+                </p>
+                <div className="-ml-3 flex gap-1 sm:-mr-3 sm:ml-0">
+                  <Button asChild variant="ghost" size="sm">
+                    <Link href={`/purchases/${p.id}/edit`}>
+                      <Pencil />
+                      Edit
+                    </Link>
+                  </Button>
+                  <DeletePurchaseButton
+                    purchaseId={p.id}
+                    label={`the ${p.dealer || "unknown dealer"} purchase from ${formatDate(p.purchase_date)}`}
+                  />
+                </div>
+              </div>
             </div>
 
             <ul className="mt-4 space-y-2">
@@ -219,6 +234,7 @@ function PurchaseList({
                   key={item.id}
                   item={item}
                   currency={p.purchase_currency}
+                  purchaseDate={p.purchase_date}
                   value={values.get(item.id)}
                 />
               ))}
@@ -232,19 +248,32 @@ function PurchaseList({
   );
 }
 
+function formatDate(iso: string) {
+  // Date-only strings parse as UTC midnight — format in UTC so the day never shifts.
+  return new Date(iso).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 function HoldingRow({
   item,
   currency,
+  purchaseDate,
   value,
 }: {
   item: Holding;
   currency: string;
+  purchaseDate: string;
   value?: HoldingValue;
 }) {
   const pl = value?.unrealized_pl ?? value?.realized_pl ?? null;
   const metal = item.metal === "gold" ? "Gold" : "Silver";
   const purity = item.purity ? ` ${item.purity}` : "";
   const form = item.form ? ` ${item.form}` : "";
+  const sale = item.sale;
   return (
     <li className="flex flex-wrap items-baseline justify-between gap-2 rounded-md bg-surface-muted/60 px-3 py-2">
       <div className="text-body-sm">
@@ -258,6 +287,28 @@ function HoldingRow({
           {item.quantity > 1 ? ` × ${item.quantity}` : ""}
           {item.brand ? ` · ${item.brand}` : ""}
         </span>
+        {sale ? (
+          <p className="mt-0.5 text-caption text-foreground-muted num">
+            Sold {formatDate(sale.sale_date)} for{" "}
+            {formatCurrency(Number(sale.sale_price), sale.sale_currency)}
+            {Number(sale.fees) > 0
+              ? ` (fees ${formatCurrency(Number(sale.fees), sale.sale_currency)})`
+              : ""}
+            {sale.sold_to ? ` · ${sale.sold_to}` : ""}
+          </p>
+        ) : null}
+        <div className="-ml-2 mt-1">
+          {sale ? (
+            <UndoSaleButton holdingId={item.id} />
+          ) : (
+            <SellButton
+              holdingId={item.id}
+              label={`${metal}${purity}${form}`.trim()}
+              currency={currency}
+              purchaseDate={purchaseDate}
+            />
+          )}
+        </div>
       </div>
       <div className="text-right text-body-sm num">
         <div className="font-medium text-foreground">
