@@ -1,9 +1,15 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { apiFetch, ApiError } from "@/lib/api-client";
-import type { Purchase, PurchaseCreatePayload } from "@/lib/api-types";
+import { apiErrorMessage, apiFetch } from "@/lib/api-client";
+import type {
+  Purchase,
+  PurchaseCreatePayload,
+  PurchaseUpdatePayload,
+} from "@/lib/api-types";
+import type { ActionResult } from "@/lib/purchases/file-actions";
 
 export type CreatePurchaseResult =
   | { ok: true; purchase: Purchase }
@@ -25,17 +31,37 @@ export async function createPurchaseAction(
     );
     return { ok: true, purchase };
   } catch (err) {
-    if (err instanceof ApiError) {
-      const detail =
-        typeof err.detail === "string"
-          ? err.detail
-          : JSON.stringify(err.detail);
-      return { ok: false, error: detail };
-    }
-    return {
-      ok: false,
-      error: err instanceof Error ? err.message : String(err),
-    };
+    return { ok: false, error: apiErrorMessage(err) };
+  }
+}
+
+/** Replace a purchase's details and items (ids = keep/update, no id = add). */
+export async function updatePurchaseAction(
+  purchaseId: string,
+  payload: PurchaseUpdatePayload,
+): Promise<CreatePurchaseResult> {
+  try {
+    const purchase = await apiFetch<Purchase>(`/purchases/${purchaseId}`, {
+      method: "PUT",
+      body: payload,
+    });
+    revalidatePath("/dashboard");
+    return { ok: true, purchase };
+  } catch (err) {
+    return { ok: false, error: apiErrorMessage(err) };
+  }
+}
+
+/** Delete a purchase with its items, sales and receipts. */
+export async function deletePurchaseAction(
+  purchaseId: string,
+): Promise<ActionResult<null>> {
+  try {
+    await apiFetch(`/purchases/${purchaseId}`, { method: "DELETE" });
+    revalidatePath("/dashboard");
+    return { ok: true, data: null };
+  } catch (err) {
+    return { ok: false, error: apiErrorMessage(err) };
   }
 }
 

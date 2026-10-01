@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { apiFetch, ApiError } from "@/lib/api-client";
+import { apiErrorMessage, apiFetch } from "@/lib/api-client";
 import type {
   RegisterFilePayload,
   SignUploadPayload,
@@ -14,14 +14,7 @@ export type ActionResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: string };
 
-function toError(err: unknown): string {
-  if (err instanceof ApiError) {
-    return typeof err.detail === "string"
-      ? err.detail
-      : JSON.stringify(err.detail);
-  }
-  return err instanceof Error ? err.message : String(err);
-}
+const toError = apiErrorMessage;
 
 /**
  * Asks the backend for a one-shot signed PUT URL that the browser will
