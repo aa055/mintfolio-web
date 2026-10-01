@@ -214,49 +214,51 @@ function Allocation({ metals, currency }: { metals: MetalSummary[]; currency: st
           </div>
         ) : null}
 
-        <table className="w-full whitespace-nowrap text-body-sm">
-          <thead>
-            <tr className="text-left text-caption text-foreground-subtle">
-              <th className="pb-2 font-medium">Metal</th>
-              <th className="pb-2 text-right font-medium">Weight</th>
-              <th className="pb-2 text-right font-medium">Value</th>
-              <th className="hidden pb-2 text-right font-medium sm:table-cell">Cost</th>
-              <th className="pb-2 text-right font-medium">P/L</th>
-              <th className="hidden pb-2 text-right font-medium sm:table-cell">Share</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ordered.map((m) => {
-              const value = Number(m.current_value);
-              const pl = value - Number(m.cost_basis);
-              return (
-                <tr key={m.metal} className="border-t border-border">
-                  <td className="py-2">
-                    <span className="flex items-center gap-2 font-medium text-foreground">
-                      <span className={cn("h-2.5 w-2.5 rounded-sm", METAL_SWATCH[m.metal])} aria-hidden />
-                      {METAL_LABEL[m.metal]}
-                    </span>
-                  </td>
-                  <td className="py-2 text-right num text-foreground-muted">
-                    {formatWeight(Number(m.grams), "g")}
-                  </td>
-                  <td className="py-2 text-right num text-foreground">
-                    {formatCurrency(value, currency)}
-                  </td>
-                  <td className="hidden py-2 text-right num text-foreground-muted sm:table-cell">
-                    {formatCurrency(Number(m.cost_basis), currency)}
-                  </td>
-                  <td className={cn("py-2 text-right num", plTone(pl))}>
-                    {formatSignedCurrency(pl, currency)}
-                  </td>
-                  <td className="hidden py-2 text-right num text-foreground-muted sm:table-cell">
-                    {total > 0 ? `${((value / total) * 100).toFixed(1)}%` : "—"}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div className="-mx-6 overflow-x-auto px-6">
+          <table className="w-full whitespace-nowrap text-body-sm">
+            <thead>
+              <tr className="text-left text-caption text-foreground-subtle">
+                <th className="pb-2 font-medium">Metal</th>
+                <th className="hidden pb-2 text-right font-medium sm:table-cell">Weight</th>
+                <th className="pb-2 text-right font-medium">Value</th>
+                <th className="hidden pb-2 text-right font-medium sm:table-cell">Cost</th>
+                <th className="pb-2 text-right font-medium">P/L</th>
+                <th className="hidden pb-2 text-right font-medium sm:table-cell">Share</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ordered.map((m) => {
+                const value = Number(m.current_value);
+                const pl = value - Number(m.cost_basis);
+                return (
+                  <tr key={m.metal} className="border-t border-border">
+                    <td className="py-2">
+                      <span className="flex items-center gap-2 font-medium text-foreground">
+                        <span className={cn("h-2.5 w-2.5 rounded-sm", METAL_SWATCH[m.metal])} aria-hidden />
+                        {METAL_LABEL[m.metal]}
+                      </span>
+                    </td>
+                    <td className="hidden py-2 text-right num text-foreground-muted sm:table-cell">
+                      {formatWeight(Number(m.grams), "g")}
+                    </td>
+                    <td className="py-2 text-right num text-foreground">
+                      {formatCurrency(value, currency)}
+                    </td>
+                    <td className="hidden py-2 text-right num text-foreground-muted sm:table-cell">
+                      {formatCurrency(Number(m.cost_basis), currency)}
+                    </td>
+                    <td className={cn("py-2 text-right num", plTone(pl))}>
+                      {formatSignedCurrency(pl, currency)}
+                    </td>
+                    <td className="hidden py-2 text-right num text-foreground-muted sm:table-cell">
+                      {total > 0 ? `${((value / total) * 100).toFixed(1)}%` : "—"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </CardContent>
     </Card>
   );
