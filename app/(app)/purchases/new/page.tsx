@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation";
 
+import { PurchaseForm } from "@/components/purchases/purchase-form";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import type { MeResponse } from "@/lib/api-types";
-
-import { NewPurchaseForm } from "./new-purchase-form";
 
 export default async function NewPurchasePage() {
   let me: MeResponse;
@@ -16,5 +15,5 @@ export default async function NewPurchasePage() {
     }
     throw err;
   }
-  return <NewPurchaseForm portfolioId={me.portfolio.id} />;
+  return <PurchaseForm portfolioId={me.portfolio.id} />;
 }
