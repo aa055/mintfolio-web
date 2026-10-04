@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Coins, Settings } from "lucide-react";
+import { Coins, List, Settings } from "lucide-react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,13 @@ export default async function AppLayout({
             <span className="hidden text-caption text-foreground-muted sm:inline">
               {user.email}
             </span>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/holdings">
+                <List />
+                <span className="hidden sm:inline">Holdings</span>
+                <span className="sr-only sm:hidden">Holdings</span>
+              </Link>
+            </Button>
             <Button asChild variant="ghost" size="sm">
               <Link href="/settings">
                 <Settings />

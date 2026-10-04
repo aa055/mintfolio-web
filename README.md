@@ -92,5 +92,5 @@ docs/
 - [x] Receipt upload (signed URL → Supabase Storage)
 - [x] Portfolio summary widgets (value, P/L, allocation)
 - [x] Live + manual price toggle
-- [ ] Holdings table with filters
+- [x] Holdings table with filters + sorting (/holdings)
 - [x] Settings (currency, timezone, pricing mode, manual rates)
