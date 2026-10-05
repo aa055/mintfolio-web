@@ -1,157 +1,181 @@
 import Link from "next/link";
-import { CircleAlert, Pencil, Plus, ReceiptText } from "lucide-react";
+import { CircleAlert, Plus, ReceiptText } from "lucide-react";
 
+import { AllocationCard, SummaryNotices } from "@/components/home/allocation-card";
+import { PerformanceChart } from "@/components/home/performance-chart";
+import { RateCards } from "@/components/home/rate-cards";
+import { RecentTransactions, type RecentTransaction } from "@/components/home/recent-transactions";
+import { SummaryTiles } from "@/components/home/summary-tiles";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  formatSignedCurrency,
-  PortfolioSummaryView,
-  plTone,
-} from "@/components/dashboard/portfolio-summary";
-import {
-  DeletePurchaseButton,
-  SellButton,
-  UndoSaleButton,
-} from "@/components/purchases/holding-actions";
-import { ReceiptStrip } from "@/components/purchases/receipt-strip";
-import { ApiError, apiFetch } from "@/lib/api-client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ApiError, apiErrorMessage, apiFetch } from "@/lib/api-client";
 import type {
-  Holding,
-  HoldingValue,
   MeResponse,
+  PortfolioHistory,
   PortfolioSummary,
-  Purchase,
-  PurchaseListResponse,
+  TransactionList,
 } from "@/lib/api-types";
-import { cn, formatCurrency, formatWeight } from "@/lib/utils";
+import { getMe } from "@/lib/me";
 
-export default async function DashboardPage() {
-  let me: MeResponse | null = null;
-  let purchases: Purchase[] = [];
-  let summary: PortfolioSummary | null = null;
-  let syncError: string | null = null;
-  let listError: string | null = null;
+/** "1 Sep 2026" — date-only ISO strings are UTC midnight, so format in UTC. */
+function formatDay(iso: string, withYear = true) {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    ...(withYear ? { year: "numeric" } : {}),
+    timeZone: "UTC",
+  }).format(new Date(`${iso}T00:00:00Z`));
+}
 
+/** Greeting, long date and today's ISO date in the user's timezone. */
+function localNow(timeZone: string) {
+  const now = new Date();
+  const tz = (() => {
+    try {
+      new Intl.DateTimeFormat("en-GB", { timeZone });
+      return timeZone;
+    } catch {
+      return "Asia/Dubai";
+    }
+  })();
+  const hour = Number(
+    new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone: tz }).format(now),
+  );
+  return {
+    greeting: hour < 5 ? "Good evening" : hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening",
+    longDate: new Intl.DateTimeFormat("en-GB", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      timeZone: tz,
+    }).format(now),
+    isoDate: new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(now), // YYYY-MM-DD
+  };
+}
+
+async function loadMe(): Promise<{ me: MeResponse | null; error: string | null }> {
   try {
-    me = await apiFetch<MeResponse>("/auth/me", { method: "GET" });
+    return { me: await getMe(), error: null };
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {
+      // First visit after signup: create the user + portfolio rows.
       try {
-        me = await apiFetch<MeResponse>("/auth/sync", {
-          method: "POST",
-          body: {},
-        });
-      } catch (innerErr) {
-        syncError =
-          innerErr instanceof Error ? innerErr.message : String(innerErr);
+        const me = await apiFetch<MeResponse>("/auth/sync", { method: "POST", body: {} });
+        return { me, error: null };
+      } catch (inner) {
+        return { me: null, error: apiErrorMessage(inner) };
       }
-    } else {
-      syncError = err instanceof Error ? err.message : String(err);
     }
+    return { me: null, error: apiErrorMessage(err) };
+  }
+}
+
+export default async function HomePage() {
+  const { me, error } = await loadMe();
+  if (!me) return <BackendError message={error} />;
+
+  const pid = me.portfolio.id;
+  const [summaryRes, historyRes, txRes] = await Promise.allSettled([
+    apiFetch<PortfolioSummary>(`/portfolios/${pid}/summary`, { method: "GET" }),
+    apiFetch<PortfolioHistory>(`/portfolios/${pid}/history?range=ALL`, { method: "GET" }),
+    apiFetch<TransactionList>(`/portfolios/${pid}/transactions?limit=100`, { method: "GET" }),
+  ]);
+  const summary = summaryRes.status === "fulfilled" ? summaryRes.value : null;
+  const history = historyRes.status === "fulfilled" ? historyRes.value : null;
+  const transactions: RecentTransaction[] =
+    txRes.status === "fulfilled"
+      ? txRes.value.transactions.map((t) => ({ ...t, dateLabel: formatDay(t.date) }))
+      : [];
+  for (const res of [summaryRes, historyRes, txRes]) {
+    if (res.status === "rejected") console.error("[home] request failed:", res.reason);
   }
 
-  if (me) {
-    // Independent requests: a summary failure shouldn't hide the purchase list.
-    const [list, sum] = await Promise.allSettled([
-      apiFetch<PurchaseListResponse>(`/portfolios/${me.portfolio.id}/purchases`, {
-        method: "GET",
-      }),
-      apiFetch<PortfolioSummary>(`/portfolios/${me.portfolio.id}/summary`, {
-        method: "GET",
-      }),
-    ]);
-    if (list.status === "fulfilled") {
-      purchases = list.value.purchases;
-    } else {
-      listError = errorMessage(list.reason);
-    }
-    if (sum.status === "fulfilled") {
-      summary = sum.value;
-    } else {
-      console.error("[dashboard] summary failed:", sum.reason);
-    }
-  }
+  const now = localNow(me.user.timezone);
+  const firstName = me.user.display_name?.trim().split(/\s+/)[0];
+  const hasPurchases =
+    transactions.some((t) => t.kind === "purchase") ||
+    (summary !== null && summary.active_count + summary.sold_count + summary.other_currency_count > 0);
+  const marketDay = summary?.market_rates[0]?.day;
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="space-y-6">
+      <header className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-micro font-semibold uppercase tracking-wider text-foreground-subtle">
-            Dashboard
+            {now.longDate}
           </p>
           <h1 className="mt-2 font-display text-display-md font-medium tracking-tight text-foreground">
-            {me?.user.display_name
-              ? `Hi, ${me.user.display_name.split(" ")[0]}.`
-              : "Welcome."}
+            {now.greeting}
+            {firstName ? `, ${firstName}` : ""}.
           </h1>
           <p className="mt-2 text-body text-foreground-muted">
-            {purchases.length === 0
-              ? "Record your first purchase to start tracking your holdings."
-              : `Tracking ${purchases.length} purchase${purchases.length !== 1 ? "s" : ""} in ${me?.user.preferred_currency ?? ""}.`}
+            {hasPurchases
+              ? "Here's how your metal is doing."
+              : "Record your first purchase to start tracking your holdings."}
           </p>
         </div>
-        {me ? (
-          <Button asChild variant="accent">
-            <Link href="/purchases/new">
-              <Plus />
-              Add purchase
-            </Link>
-          </Button>
+        {summary ? (
+          <RateCards rates={summary.market_rates} asOf={marketDay ? formatDay(marketDay) : null} />
         ) : null}
-      </div>
+      </header>
 
-      {!me ? (
+      {!hasPurchases ? (
+        <EmptyState />
+      ) : !summary ? (
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-h3 text-destructive">
-              <CircleAlert className="h-5 w-5" />
-              Couldn&apos;t reach the backend
-            </CardTitle>
-            <CardDescription className="text-foreground-muted">
-              {syncError ?? "An unexpected error occurred."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-body-sm text-foreground-muted">
-              If you&apos;re running locally, make sure FastAPI is up at{" "}
-              <code className="font-mono text-foreground">localhost:8000</code>{" "}
-              (<code className="font-mono text-foreground">uvicorn app.main:app --reload</code>).
-            </p>
+          <CardContent className="px-6 py-8 text-body-sm text-foreground-muted">
+            Couldn&apos;t load your portfolio values right now. Try refreshing in a moment.
           </CardContent>
         </Card>
-      ) : listError ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-h3 text-destructive">
-              <CircleAlert className="h-5 w-5" />
-              Couldn&apos;t load your purchases
-            </CardTitle>
-            <CardDescription className="text-foreground-muted">{listError}</CardDescription>
-          </CardHeader>
-        </Card>
-      ) : purchases.length === 0 ? (
-        <EmptyState />
       ) : (
         <>
-          {summary ? <PortfolioSummaryView summary={summary} /> : null}
-          <PurchaseList
-            purchases={purchases}
-            values={new Map(summary?.holdings.map((h) => [h.id, h]))}
+          <SummaryNotices summary={summary} />
+          <SummaryTiles
+            summary={summary}
+            todayLabel={
+              summary.today_change ? formatDay(summary.today_change.previous_day, false) : null
+            }
           />
+          <PerformanceChart
+            points={history?.points ?? []}
+            currency={summary.currency}
+            pricingMode={summary.pricing_mode}
+          />
+          <div className="grid gap-6 lg:grid-cols-5">
+            <div className="lg:col-span-2">
+              <AllocationCard summary={summary} />
+            </div>
+            <div className="lg:col-span-3">
+              <RecentTransactions transactions={transactions} today={now.isoDate} />
+            </div>
+          </div>
         </>
       )}
     </div>
   );
 }
 
-function errorMessage(err: unknown): string {
-  return err instanceof Error ? err.message : String(err);
+function BackendError({ message }: { message: string | null }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-h3 text-destructive">
+          <CircleAlert className="h-5 w-5" />
+          Couldn&apos;t reach the backend
+        </CardTitle>
+        <CardDescription className="text-foreground-muted">
+          {message ?? "An unexpected error occurred."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <p className="text-body-sm text-foreground-muted">
+          If you&apos;re running locally, make sure FastAPI is up at{" "}
+          <code className="font-mono text-foreground">localhost:8000</code> (
+          <code className="font-mono text-foreground">uvicorn app.main:app --reload</code>).
+        </p>
+      </CardContent>
+    </Card>
+  );
 }
 
 function EmptyState() {
@@ -163,9 +187,8 @@ function EmptyState() {
         </span>
         <h2 className="text-h3 font-semibold text-foreground">No purchases yet</h2>
         <p className="max-w-md text-body-sm text-foreground-muted">
-          A purchase captures a single dealer order. Add as many gold or silver
-          line items as the receipt shows — they&apos;ll group together so you
-          can track value, sales, and P/L per item.
+          A purchase captures a single dealer order. Add as many gold or silver line items as the
+          receipt shows — your value, gains and charts build from there.
         </p>
         <Button asChild variant="accent" className="mt-2">
           <Link href="/purchases/new">
@@ -175,159 +198,5 @@ function EmptyState() {
         </Button>
       </CardContent>
     </Card>
-  );
-}
-
-function PurchaseList({
-  purchases,
-  values,
-}: {
-  purchases: Purchase[];
-  values: Map<string, HoldingValue>;
-}) {
-  return (
-    <div className="space-y-4">
-      <h2 className="text-h3 font-semibold text-foreground">Purchases</h2>
-      {purchases.map((p) => (
-        <Card key={p.id}>
-          <CardContent className="p-6">
-            <div className="flex flex-col gap-2 border-b border-border pb-4 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <p className="text-micro font-semibold uppercase tracking-wider text-foreground-subtle">
-                  {formatDate(p.purchase_date)}
-                </p>
-                <p className="mt-1 text-h3 font-semibold text-foreground">
-                  {p.dealer || "Unknown dealer"}
-                </p>
-                <p className="mt-1 text-caption text-foreground-muted">
-                  {p.items.length} item{p.items.length !== 1 ? "s" : ""} ·{" "}
-                  {p.payment_method === "card"
-                    ? `Card (${p.card_premium_percentage ?? "?"}% premium)`
-                    : "Cash"}
-                </p>
-              </div>
-              <div className="flex flex-col gap-2 sm:items-end">
-                <p className="font-display text-h2 font-medium tracking-tight num text-foreground sm:text-right">
-                  {formatCurrency(
-                    Number(p.total_amount),
-                    p.purchase_currency,
-                  )}
-                </p>
-                <div className="-ml-3 flex gap-1 sm:-mr-3 sm:ml-0">
-                  <Button asChild variant="ghost" size="sm">
-                    <Link href={`/purchases/${p.id}/edit`}>
-                      <Pencil />
-                      Edit
-                    </Link>
-                  </Button>
-                  <DeletePurchaseButton
-                    purchaseId={p.id}
-                    label={`the ${p.dealer || "unknown dealer"} purchase from ${formatDate(p.purchase_date)}`}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <ul className="mt-4 space-y-2">
-              {p.items.map((item) => (
-                <HoldingRow
-                  key={item.id}
-                  item={item}
-                  currency={p.purchase_currency}
-                  purchaseDate={p.purchase_date}
-                  value={values.get(item.id)}
-                />
-              ))}
-            </ul>
-
-            <ReceiptStrip files={p.files} />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
-function formatDate(iso: string) {
-  // Date-only strings parse as UTC midnight — format in UTC so the day never shifts.
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-}
-
-function HoldingRow({
-  item,
-  currency,
-  purchaseDate,
-  value,
-}: {
-  item: Holding;
-  currency: string;
-  purchaseDate: string;
-  value?: HoldingValue;
-}) {
-  const pl = value?.unrealized_pl ?? value?.realized_pl ?? null;
-  const metal = item.metal === "gold" ? "Gold" : "Silver";
-  const purity = item.purity ? ` ${item.purity}` : "";
-  const form = item.form ? ` ${item.form}` : "";
-  const sale = item.sale;
-  return (
-    <li className="flex flex-wrap items-baseline justify-between gap-2 rounded-md bg-surface-muted/60 px-3 py-2">
-      <div className="text-body-sm">
-        <span className="font-medium text-foreground">
-          {metal}
-          {purity}
-          {form}
-        </span>
-        <span className="ml-2 text-foreground-muted num">
-          {formatWeight(Number(item.weight_grams), "g")}
-          {item.quantity > 1 ? ` × ${item.quantity}` : ""}
-          {item.brand ? ` · ${item.brand}` : ""}
-        </span>
-        {sale ? (
-          <p className="mt-0.5 text-caption text-foreground-muted num">
-            Sold {formatDate(sale.sale_date)} for{" "}
-            {formatCurrency(Number(sale.sale_price), sale.sale_currency)}
-            {Number(sale.fees) > 0
-              ? ` (fees ${formatCurrency(Number(sale.fees), sale.sale_currency)})`
-              : ""}
-            {sale.sold_to ? ` · ${sale.sold_to}` : ""}
-          </p>
-        ) : null}
-        <div className="-ml-2 mt-1">
-          {sale ? (
-            <UndoSaleButton holdingId={item.id} />
-          ) : (
-            <SellButton
-              holdingId={item.id}
-              label={`${metal}${purity}${form}`.trim()}
-              currency={currency}
-              purchaseDate={purchaseDate}
-            />
-          )}
-        </div>
-      </div>
-      <div className="text-right text-body-sm num">
-        <div className="font-medium text-foreground">
-          {formatCurrency(Number(item.purchase_price), currency)}
-          {item.status === "sold" ? (
-            <span className="ml-2 text-caption text-foreground-subtle">sold</span>
-          ) : null}
-        </div>
-        {value?.current_value != null ? (
-          <div className="text-caption text-foreground-muted">
-            now {formatCurrency(Number(value.current_value), currency)}
-          </div>
-        ) : null}
-        {pl !== null ? (
-          <div className={cn("text-caption", plTone(Number(pl)))}>
-            {formatSignedCurrency(Number(pl), currency)}
-          </div>
-        ) : null}
-      </div>
-    </li>
   );
 }
