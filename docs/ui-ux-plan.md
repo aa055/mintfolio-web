@@ -186,12 +186,13 @@ The charts on Home and Rates depend on this, so it comes first.
 - **Result (2026-10-01):** 1,817 days stored (30 Sep 2021 to 30 Sep 2026), using 63 metals.dev calls. metals.dev itself has no data for 10–11 Dec 2024 and 25 Dec 2024 – 1 Jan 2025; the history carries the previous price across those days.
 
 ### Step 1: App shell
-- [ ] `app/(app)/layout.tsx` becomes sidebar + top bar + content. Below 640px it becomes a top bar + bottom tab bar.
-- [ ] Components: `Sidebar`, `TopBar`, `MobileTabBar`, `UserMenu` (Radix dropdown, already installed). The current section is highlighted.
-- [ ] Remove the current header links.
-- [ ] Add placeholder pages for `/transactions`, `/rates` and `/profile` so navigation works end to end.
-- [ ] Add the new routes to the protected list in middleware.
+- [x] `app/(app)/layout.tsx` becomes sidebar + top bar + content. Below 640px it becomes a top bar + bottom tab bar.
+- [x] Components: `Sidebar`, `TopBar`, `MobileTabBar`, `UserMenu` (Radix dropdown, already installed). The current section is highlighted.
+- [x] Remove the current header links.
+- [x] Add placeholder pages for `/transactions`, `/rates` and `/profile` so navigation works end to end.
+- [x] Add the new routes to the protected list in middleware.
 - **Done when:** every page renders in the shell at 1280, 800 and 390px widths with no sideways scroll, and the keyboard can reach every nav item.
+- **Result (2026-10-04):** browser-tested at all three widths on all 7 pages. The test found and fixed two layout bugs: an invisible table label widening the page, and Holdings columns too cramped beside the rail.
 
 ### Step 2: Home redesign
 - [ ] **API:**
