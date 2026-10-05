@@ -78,3 +78,24 @@ export function todayIsoDate(): string {
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().slice(0, 10);
 }
+
+/** "+AED 1,200.00" / "−AED 50.00" — the sign is explicit so it never relies on colour. */
+export function formatSignedCurrency(amount: number, currency: string) {
+  const sign = amount > 0 ? "+" : amount < 0 ? "−" : "";
+  return `${sign}${formatCurrency(Math.abs(amount), currency)}`;
+}
+
+/** Text colour for a gain / loss / flat amount. */
+export function plTone(amount: number) {
+  return amount > 0 ? "text-success" : amount < 0 ? "text-destructive" : "text-foreground-muted";
+}
+
+/** Short axis label: "AED 20K", "AED 1.2M". */
+export function formatCompactCurrency(amount: number, currency: string) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(amount);
+}

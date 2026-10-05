@@ -205,16 +205,37 @@ export interface HoldingValue {
   realized_pl: string | null;
 }
 
+export interface MarketRate {
+  metal: Metal;
+  currency: string;
+  day: string;
+  rate_per_gram: string;
+  previous_day: string | null;
+  previous_rate: string | null;
+  change_pct: string | null;
+}
+
+export interface DayChange {
+  day: string;
+  previous_day: string;
+  amount: string;
+  pct: string | null;
+}
+
 export interface PortfolioSummary {
   currency: string;
   pricing_mode: "live" | "manual";
   rates: Rate[];
+  market_rates: MarketRate[];
   total_value: string;
   cost_basis: string;
   total_invested: string;
   unrealized_pl: string;
   unrealized_pl_pct: string | null;
   realized_pl: string;
+  all_time_pl: string;
+  all_time_pl_pct: string | null;
+  today_change: DayChange | null;
   active_count: number;
   sold_count: number;
   unvalued_count: number;
@@ -226,3 +247,38 @@ export interface PortfolioSummary {
 export type PurchaseUpdatePayload = Omit<PurchaseCreatePayload, "items"> & {
   items: (HoldingCreatePayload & { id?: string })[];
 };
+
+// ---------------- Performance + activity ----------------
+
+export interface PortfolioPoint {
+  day: string;
+  value: string;
+  invested: string;
+  realized: string; // cumulative realized P/L up to this day
+}
+
+export interface PortfolioHistory {
+  currency: string;
+  range: string;
+  points: PortfolioPoint[];
+}
+
+export interface Transaction {
+  kind: "purchase" | "sale";
+  date: string;
+  created_at: string;
+  purchase_id: string;
+  holding_id: string | null;
+  title: string;
+  detail: string;
+  currency: string;
+  amount: string;
+  realized_pl: string | null;
+  item_count: number;
+  receipt_count: number;
+  metals: Metal[];
+}
+
+export interface TransactionList {
+  transactions: Transaction[];
+}
