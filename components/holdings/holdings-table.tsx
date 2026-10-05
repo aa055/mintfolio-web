@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, Pencil, Plus, Search, X } from "lucide-react";
 
-import { formatSignedCurrency, plTone } from "@/components/dashboard/portfolio-summary";
 import { SellButton, UndoSaleButton } from "@/components/purchases/holding-actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { HoldingForm, HoldingStatus, Metal, Sale } from "@/lib/api-types";
-import { cn, formatCurrency, formatWeight } from "@/lib/utils";
+import { cn, formatCurrency, formatSignedCurrency, formatWeight, plTone } from "@/lib/utils";
 
 export interface HoldingRow {
   id: string;
