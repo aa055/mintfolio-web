@@ -399,13 +399,15 @@ function Table({
   );
 
   return (
-    <div className="overflow-x-auto">
+    // `relative` so absolutely positioned descendants (sr-only labels) are clipped
+    // here too — otherwise they widen the page.
+    <div className="relative overflow-x-auto">
       <table className="w-full text-body-sm">
         <thead>
           <tr className="border-b border-border text-left text-caption text-foreground-subtle">
-            <th className="px-4 py-3 font-medium sm:px-6">Item</th>
-            <th className="hidden px-3 py-3 font-medium md:table-cell">Dealer</th>
-            {header("date", "Purchased", "hidden md:table-cell")}
+            <th className="min-w-[11rem] px-4 py-3 font-medium sm:px-6">Item</th>
+            <th className="hidden px-3 py-3 font-medium lg:table-cell">Dealer</th>
+            {header("date", "Purchased", "hidden lg:table-cell")}
             {header("weight", "Weight", "hidden sm:table-cell")}
             {header("cost", "Cost")}
             {header("value", "Value", "hidden sm:table-cell")}
@@ -431,7 +433,7 @@ function Table({
                   {[r.brand, r.storageLocation].filter(Boolean).join(" · ")}
                 </p>
                 {/* Columns hidden on small screens fold into this line */}
-                <p className="mt-0.5 text-caption text-foreground-muted num md:hidden">
+                <p className="mt-0.5 text-caption text-foreground-muted num lg:hidden">
                   {[r.dealer, r.purchaseDateLabel].filter(Boolean).join(" · ")}
                 </p>
                 {r.sale ? (
@@ -441,10 +443,10 @@ function Table({
                   </p>
                 ) : null}
               </td>
-              <td className="hidden px-3 py-3 text-foreground-muted md:table-cell">
+              <td className="hidden px-3 py-3 text-foreground-muted lg:table-cell">
                 {r.dealer ?? "—"}
               </td>
-              <td className="hidden whitespace-nowrap px-3 py-3 text-right num text-foreground-muted md:table-cell">
+              <td className="hidden whitespace-nowrap px-3 py-3 text-right num text-foreground-muted lg:table-cell">
                 {r.purchaseDateLabel}
               </td>
               <td className="hidden whitespace-nowrap px-3 py-3 text-right num text-foreground-muted sm:table-cell">

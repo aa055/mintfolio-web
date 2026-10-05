@@ -214,7 +214,7 @@ function Allocation({ metals, currency }: { metals: MetalSummary[]; currency: st
           </div>
         ) : null}
 
-        <div className="-mx-6 overflow-x-auto px-6">
+        <div className="relative -mx-6 overflow-x-auto px-6">
           <table className="w-full whitespace-nowrap text-body-sm">
             <thead>
               <tr className="text-left text-caption text-foreground-subtle">
