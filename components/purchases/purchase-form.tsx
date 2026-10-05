@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DeletePurchaseButton } from "@/components/purchases/holding-actions";
 import { ReceiptStrip } from "@/components/purchases/receipt-strip";
 import { createPurchaseAction, updatePurchaseAction } from "@/lib/purchases/actions";
 import {
@@ -370,7 +371,7 @@ export function PurchaseForm({
       className="mx-auto max-w-3xl space-y-8"
       noValidate
     >
-      <header className="flex items-center justify-between">
+      <header className="flex items-start justify-between gap-4">
         <div>
           <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2">
             <Link href="/dashboard">
@@ -390,6 +391,13 @@ export function PurchaseForm({
               : "Capture the dealer details once — add as many line items as the receipt shows."}
           </p>
         </div>
+        {editing ? (
+          <DeletePurchaseButton
+            purchaseId={purchase.id}
+            label={`this ${purchase.dealer || "purchase"}`}
+            redirectTo="/dashboard"
+          />
+        ) : null}
       </header>
 
       {/* ---------- Order details ---------- */}

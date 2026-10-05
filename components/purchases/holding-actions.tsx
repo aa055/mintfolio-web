@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import type { Route } from "next";
 import { useState, useTransition } from "react";
 import { Tag, Trash2, Undo2 } from "lucide-react";
 
@@ -163,7 +164,16 @@ export function UndoSaleButton({ holdingId }: { holdingId: string }) {
   );
 }
 
-export function DeletePurchaseButton({ purchaseId, label }: { purchaseId: string; label: string }) {
+export function DeletePurchaseButton({
+  purchaseId,
+  label,
+  redirectTo,
+}: {
+  purchaseId: string;
+  label: string;
+  /** Where to go afterwards when the current page shows this purchase. */
+  redirectTo?: Route;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -173,7 +183,11 @@ export function DeletePurchaseButton({ purchaseId, label }: { purchaseId: string
     }
     startTransition(async () => {
       const result = await deletePurchaseAction(purchaseId);
-      if (!result.ok) alert(result.error);
+      if (!result.ok) {
+        alert(result.error);
+        return;
+      }
+      if (redirectTo) router.push(redirectTo);
       router.refresh();
     });
   }
