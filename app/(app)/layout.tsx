@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Coins, List, Settings } from "lucide-react";
 
-import { LogoutButton } from "@/components/auth/logout-button";
-import { Button } from "@/components/ui/button";
+import { MobileTabBar } from "@/components/shell/mobile-tab-bar";
+import { BrandMark, Sidebar } from "@/components/shell/sidebar";
+import { UserMenu, type MenuUser } from "@/components/shell/user-menu";
+import { getMe } from "@/lib/me";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AppLayout({
@@ -20,42 +20,41 @@ export default async function AppLayout({
     redirect("/login");
   }
 
+  // Profile from the API when available; Supabase metadata (set at signup
+  // or by Google) as the fallback so the shell renders even if the API is down.
+  const me = await getMe().catch(() => null);
+  const meta = user.user_metadata as Record<string, string | undefined>;
+  const menuUser: MenuUser = {
+    name: me?.user.display_name ?? meta.full_name ?? meta.name ?? null,
+    email: user.email ?? me?.user.email ?? "",
+    avatarUrl: me?.user.avatar_url ?? meta.avatar_url ?? meta.picture ?? null,
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border/60 bg-surface">
-        <div className="container flex h-16 items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <span className="grid h-9 w-9 place-items-center rounded-md bg-primary text-primary-foreground">
-              <Coins className="h-5 w-5" strokeWidth={1.75} />
-            </span>
-            <span className="font-display text-h3 font-medium tracking-tight">
-              Mintfolio
-            </span>
-          </Link>
+      <a
+        href="#main"
+        className="sr-only z-50 rounded-md bg-surface px-3 py-2 text-body-sm font-medium focus:not-sr-only focus:fixed focus:left-3 focus:top-3"
+      >
+        Skip to content
+      </a>
 
-          <nav className="flex items-center gap-2">
-            <span className="hidden text-caption text-foreground-muted sm:inline">
-              {user.email}
-            </span>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/holdings">
-                <List />
-                <span className="hidden sm:inline">Holdings</span>
-                <span className="sr-only sm:hidden">Holdings</span>
-              </Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/settings">
-                <Settings />
-                <span className="hidden sm:inline">Settings</span>
-                <span className="sr-only sm:hidden">Settings</span>
-              </Link>
-            </Button>
-            <LogoutButton />
-          </nav>
-        </div>
-      </header>
-      <main className="container py-10">{children}</main>
+      <Sidebar />
+
+      <div className="sm:pl-16 lg:pl-60">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border/60 bg-surface/90 px-4 backdrop-blur sm:justify-end sm:px-6 lg:px-8">
+          <div className="sm:hidden">
+            <BrandMark />
+          </div>
+          <UserMenu user={menuUser} />
+        </header>
+
+        <main id="main" className="mx-auto max-w-6xl px-4 pb-28 pt-8 sm:px-6 sm:pb-12 lg:px-8">
+          {children}
+        </main>
+      </div>
+
+      <MobileTabBar />
     </div>
   );
 }

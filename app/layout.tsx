@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 
@@ -24,6 +24,9 @@ export const metadata: Metadata = {
     "Track, value, and manage your physical gold and silver holdings in one elegant dashboard.",
   metadataBase: new URL("https://mintfolio.app"),
 };
+
+// "cover" exposes env(safe-area-inset-*) so the phone tab bar clears the home indicator.
+export const viewport: Viewport = { viewportFit: "cover" };
 
 export default function RootLayout({
   children,
