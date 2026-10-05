@@ -3,7 +3,15 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
 
-const PROTECTED_PREFIXES = ["/dashboard", "/holdings", "/purchases", "/settings"];
+const PROTECTED_PREFIXES = [
+  "/dashboard",
+  "/holdings",
+  "/transactions",
+  "/purchases",
+  "/rates",
+  "/profile",
+  "/settings",
+];
 const AUTH_PAGES = ["/login", "/signup"];
 
 function isProtectedPath(pathname: string): boolean {
