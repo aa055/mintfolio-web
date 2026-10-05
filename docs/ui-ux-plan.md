@@ -195,13 +195,17 @@ The charts on Home and Rates depend on this, so it comes first.
 - **Result (2026-10-04):** browser-tested at all three widths on all 7 pages. The test found and fixed two layout bugs: an invisible table label widening the page, and Holdings columns too cramped beside the rail.
 
 ### Step 2: Home redesign
-- [ ] **API:**
+- [x] **API:**
   - `GET /portfolios/{id}/history?range=` returns daily value and net invested. It counts each holding from its purchase date until its sale date.
   - The summary gains `today_change` (amount, %, price dates), `all_time_pl` and previous-day rates.
   - `GET /portfolios/{id}/transactions?type=&since=&limit=` returns a combined feed.
-- [ ] **UI:** greeting and rate cards, the 4 tiles, the performance chart with range chips, the compact allocation, and the Recent transactions widget with its range filter.
-- [ ] The purchase list moves off Home.
+- [x] **UI:** greeting and rate cards, the 4 tiles, the performance chart with range chips, the compact allocation, and the Recent transactions widget with its range filter.
+- [x] The purchase list moves off Home.
 - **Done when:** the chart's last point equals the "Current value" tile; changing ranges re-plots; recent transactions respects the window; and a test confirms the history math.
+- **Result (2026-10-05):** all four checks pass, in the browser and in 6 new unit tests.
+  - **Chart extends to today:** it carries the latest price forward to today, so a sale made today shows immediately and the last point matches the tile.
+  - **Gain headline includes realized sales:** the "Gain over <range>" figure counts realized P/L from sales in the range, so a profitable sale isn't shown as a loss.
+  - **Interim:** a Delete button sits on the edit page until the purchase detail page (Step 3) exists. Receipts are viewable only on the edit page until then.
 
 ### Step 3: Transactions + purchase detail
 - [ ] `/transactions` with tabs, filters, month groups and totals.
