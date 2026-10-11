@@ -135,6 +135,7 @@ export function PerformanceChart({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-h3 font-semibold text-foreground">Portfolio value</h2>
+            <p className="text-caption text-foreground-subtle">Valued daily at spot rates</p>
             {gainChange !== null ? (
               <p className="mt-1 text-body-sm text-foreground-muted">
                 Gain over {RANGE_LABEL[range]}:{" "}

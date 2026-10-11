@@ -421,7 +421,12 @@ function Table({
             <tr key={r.id} className="border-b border-border last:border-b-0 align-top">
               <td className="px-4 py-3 sm:px-6">
                 <p className="font-medium text-foreground">
-                  {itemLabel(r)}
+                  <Link
+                    href={`/purchases/${r.purchaseId}`}
+                    className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {itemLabel(r)}
+                  </Link>
                   {r.status === "sold" ? (
                     <span className="ml-2 rounded-sm bg-surface-muted px-1.5 py-0.5 text-caption font-normal text-foreground-muted">
                       Sold
@@ -522,7 +527,12 @@ function MobileList({ rows }: { rows: HoldingRow[] }) {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="font-medium text-foreground">
-                {itemLabel(r)}
+                <Link
+                  href={`/purchases/${r.purchaseId}`}
+                  className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {itemLabel(r)}
+                </Link>
                 {r.status === "sold" ? (
                   <span className="ml-2 rounded-sm bg-surface-muted px-1.5 py-0.5 text-caption font-normal text-foreground-muted">
                     Sold

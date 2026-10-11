@@ -6,7 +6,10 @@ import { cn, formatCurrency, plTone } from "@/lib/utils";
 
 const LABEL = { gold: "Gold 24K", silver: "Silver 999" } as const;
 
-/** Today's market rates beside the greeting; each card links to Metal rates. */
+/**
+ * Today's spot rates (international market price of pure metal, before any
+ * dealer premium) beside the greeting; each card links to Metal rates.
+ */
 export function RateCards({ rates, asOf }: { rates: MarketRate[]; asOf: string | null }) {
   if (rates.length === 0) return null;
   return (
@@ -16,7 +19,11 @@ export function RateCards({ rates, asOf }: { rates: MarketRate[]; asOf: string |
           <RateCard key={r.metal} rate={r} />
         ))}
       </div>
-      {asOf ? <p className="text-caption text-foreground-subtle">Market rates · {asOf}</p> : null}
+      {asOf ? (
+        <p className="text-caption text-foreground-subtle">
+          Spot rates · {asOf} · dealer prices add a premium
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -37,7 +44,7 @@ function RateCard({ rate }: { rate: MarketRate }) {
           )}
           aria-hidden
         />
-        {LABEL[rate.metal]}
+        {LABEL[rate.metal]} spot
       </p>
       <p className="mt-1 font-display text-h3 font-medium tracking-tight text-foreground">
         {formatCurrency(Number(rate.rate_per_gram), rate.currency)}
