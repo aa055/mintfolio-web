@@ -28,15 +28,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DeletePurchaseButton } from "@/components/purchases/holding-actions";
 import { ReceiptStrip } from "@/components/purchases/receipt-strip";
 import { createPurchaseAction, updatePurchaseAction } from "@/lib/purchases/actions";
-import {
-  registerFileAction,
-  signUploadAction,
-} from "@/lib/purchases/file-actions";
+import { uploadReceipts, validateReceipts } from "@/lib/purchases/upload";
 import type {
-  FileMimeType,
   Purchase,
   PurchaseCreatePayload,
   PurchaseUpdatePayload,
@@ -156,12 +151,6 @@ function checkItemMath(
 // Component
 // ---------------------------------------------------------------
 
-const ALLOWED_MIME_TYPES = new Set<string>([
-  "image/jpeg",
-  "image/png",
-  "application/pdf",
-]);
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 
 /** Form values for an existing purchase (edit mode). */
 function toFormValues(purchase: Purchase): FormValues {
@@ -242,24 +231,8 @@ export function PurchaseForm({
 
   function pickReceipts(files: FileList | null) {
     if (!files) return;
-    const accepted: File[] = [];
-    const rejections: string[] = [];
-    for (const f of Array.from(files)) {
-      if (!ALLOWED_MIME_TYPES.has(f.type)) {
-        rejections.push(`${f.name}: type ${f.type || "?"} not allowed`);
-        continue;
-      }
-      if (f.size > MAX_FILE_SIZE_BYTES) {
-        rejections.push(`${f.name}: ${(f.size / 1024 / 1024).toFixed(1)} MB > 5 MB limit`);
-        continue;
-      }
-      accepted.push(f);
-    }
-    if (rejections.length) {
-      setSubmitError(rejections.join(" · "));
-    } else {
-      setSubmitError(null);
-    }
+    const { accepted, rejections } = validateReceipts(Array.from(files));
+    setSubmitError(rejections.length ? rejections.join(" · ") : null);
     setReceipts((prev) => [...prev, ...accepted]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
@@ -311,56 +284,25 @@ export function PurchaseForm({
       }
 
       const purchaseId = result.purchase.id;
-      const failed: string[] = [];
-
-      for (let i = 0; i < receipts.length; i++) {
-        const file = receipts[i];
-        setStatusLabel(`Uploading receipt ${i + 1} of ${receipts.length}…`);
-        try {
-          const sig = await signUploadAction(purchaseId, {
-            filename: file.name,
-            mime_type: file.type as FileMimeType,
-            size_bytes: file.size,
-          });
-          if (!sig.ok) throw new Error(sig.error);
-
-          const put = await fetch(sig.data.upload_url, {
-            method: "PUT",
-            headers: { "Content-Type": file.type },
-            body: file,
-          });
-          if (!put.ok) {
-            const errBody = await put.text();
-            throw new Error(`Storage PUT ${put.status}: ${errBody.slice(0, 120)}`);
-          }
-
-          const reg = await registerFileAction(purchaseId, {
-            storage_path: sig.data.storage_path,
-            filename: file.name,
-            mime_type: file.type as FileMimeType,
-            size_bytes: file.size,
-          });
-          if (!reg.ok) throw new Error(reg.error);
-        } catch (err) {
-          failed.push(`${file.name}: ${err instanceof Error ? err.message : String(err)}`);
-        }
-      }
+      const failed = await uploadReceipts(purchaseId, receipts, (i, n) =>
+        setStatusLabel(`Uploading receipt ${i} of ${n}…`),
+      );
 
       setStatusLabel(null);
       if (failed.length) {
-        // Purchase saved, some receipts didn't — let the user retry from dashboard.
+        // Purchase saved, some receipts didn't — they can be re-added on its page.
         setSubmitError(
           `Purchase saved, but ${failed.length} receipt${failed.length === 1 ? "" : "s"} failed: ` +
             failed.join(" · "),
         );
         setTimeout(() => {
-          router.push("/dashboard");
+          router.push(`/purchases/${purchaseId}`);
           router.refresh();
         }, 2500);
         return;
       }
 
-      router.push("/dashboard");
+      router.push(`/purchases/${purchaseId}`);
       router.refresh();
     });
   }
@@ -374,7 +316,7 @@ export function PurchaseForm({
       <header className="flex items-start justify-between gap-4">
         <div>
           <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2">
-            <Link href="/dashboard">
+            <Link href={editing ? `/purchases/${purchase.id}` : "/dashboard"}>
               <ArrowLeft />
               Back
             </Link>
@@ -391,13 +333,6 @@ export function PurchaseForm({
               : "Capture the dealer details once — add as many line items as the receipt shows."}
           </p>
         </div>
-        {editing ? (
-          <DeletePurchaseButton
-            purchaseId={purchase.id}
-            label={`this ${purchase.dealer || "purchase"}`}
-            redirectTo="/dashboard"
-          />
-        ) : null}
       </header>
 
       {/* ---------- Order details ---------- */}
@@ -779,7 +714,7 @@ export function PurchaseForm({
           </p>
         ) : null}
         <Button asChild variant="ghost">
-          <Link href="/dashboard">Cancel</Link>
+          <Link href={editing ? `/purchases/${purchase.id}` : "/dashboard"}>Cancel</Link>
         </Button>
         <Button type="submit" variant="accent" disabled={pending}>
           {pending ? "Saving…" : editing ? "Save changes" : "Save purchase"}

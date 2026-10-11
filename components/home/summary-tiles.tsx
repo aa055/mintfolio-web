@@ -30,7 +30,7 @@ export function SummaryTiles({
         {summary.active_count} active item{summary.active_count !== 1 ? "s" : ""}
       </Tile>
       <Tile label="Current value" value={formatCurrency(Number(summary.total_value), cur)}>
-        {weights || "No metal held"}
+        {weights ? `At spot · ${weights}` : "No metal held"}
       </Tile>
       {today ? (
         <Tile

@@ -100,36 +100,41 @@ function Row({ t }: { t: RecentTransaction }) {
   const Icon = isSale ? ArrowUpRight : ArrowDownLeft;
   const pl = t.realized_pl === null ? null : Number(t.realized_pl);
   return (
-    <li className="flex items-center gap-3 py-3">
-      <span
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-muted text-foreground-muted"
-        aria-hidden
+    <li>
+      <Link
+        href={`/purchases/${t.purchase_id}`}
+        className="-mx-2 flex items-center gap-3 rounded-md px-2 py-3 transition-colors hover:bg-surface-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <Icon className="h-4 w-4" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-2 text-body-sm font-medium text-foreground">
-          <span className="rounded-sm border border-border px-1.5 text-[11px] font-semibold uppercase tracking-wide text-foreground-muted">
-            {isSale ? "Sell" : "Buy"}
-          </span>
-          <span className="truncate">{t.title}</span>
-        </p>
-        <p className="truncate text-caption text-foreground-muted">
-          {t.dateLabel}
-          {t.detail ? ` · ${t.detail}` : ""}
-          {t.receipt_count > 0 ? (
-            <Paperclip className="ml-1.5 inline h-3 w-3 align-[-1px]" aria-label="Has receipts" />
+        <span
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-muted text-foreground-muted"
+          aria-hidden
+        >
+          <Icon className="h-4 w-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-2 text-body-sm font-medium text-foreground">
+            <span className="rounded-sm border border-border px-1.5 text-[11px] font-semibold uppercase tracking-wide text-foreground-muted">
+              {isSale ? "Sell" : "Buy"}
+            </span>
+            <span className="truncate">{t.title}</span>
+          </p>
+          <p className="truncate text-caption text-foreground-muted">
+            {t.dateLabel}
+            {t.detail ? ` · ${t.detail}` : ""}
+            {t.receipt_count > 0 ? (
+              <Paperclip className="ml-1.5 inline h-3 w-3 align-[-1px]" aria-label="Has receipts" />
+            ) : null}
+          </p>
+        </div>
+        <div className="shrink-0 text-right text-body-sm num">
+          <p className="font-medium text-foreground">
+            {formatCurrency(Number(t.amount), t.currency)}
+          </p>
+          {pl !== null ? (
+            <p className={cn("text-caption", plTone(pl))}>{formatSignedCurrency(pl, t.currency)}</p>
           ) : null}
-        </p>
-      </div>
-      <div className="shrink-0 text-right text-body-sm num">
-        <p className="font-medium text-foreground">
-          {formatCurrency(Number(t.amount), t.currency)}
-        </p>
-        {pl !== null ? (
-          <p className={cn("text-caption", plTone(pl))}>{formatSignedCurrency(pl, t.currency)}</p>
-        ) : null}
-      </div>
+        </div>
+      </Link>
     </li>
   );
 }
