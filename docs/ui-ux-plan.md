@@ -208,10 +208,16 @@ The charts on Home and Rates depend on this, so it comes first.
   - **Interim:** a Delete button sits on the edit page until the purchase detail page (Step 3) exists. Receipts are viewable only on the edit page until then.
 
 ### Step 3: Transactions + purchase detail
-- [ ] `/transactions` with tabs, filters, month groups and totals.
-- [ ] `/purchases/[id]` detail page with items, receipts, sales, edit/delete and sell/undo.
-- [ ] Links from Home's recent transactions and from Holdings rows point here.
+- [x] `/transactions` with tabs, filters, month groups and totals.
+- [x] `/purchases/[id]` detail page with items, receipts, sales, edit/delete and sell/undo.
+- [x] Links from Home's recent transactions and from Holdings rows point here.
 - **Done when:** every buy and sell appears exactly once, and filters survive a reload.
+- **Result (2026-10-11):** 15 browser checks pass.
+  - **Items keep their entry order:** migration `c3d4e5f6a7b8` switches holdings to `clock_timestamp()`, because `now()` gave every item in one purchase the same timestamp, so their order was random.
+  - **One current-spot rule:** valuation now uses the same "latest market day" as the charts, so the rate cards, tiles and chart always agree.
+  - **Home says spot:** the rate cards and values are labelled as spot.
+  - **Daily job re-timed:** moved to 16:37 UTC because GitHub ran it 3–5 h late and past midnight. 5 and 8 Oct were back-filled.
+  - **Not built:** a custom date range on Transactions; the presets (7D/1M/3M/1Y/All) cover it for now.
 
 ### Step 4: Holdings revamp
 - [ ] Per-metal summary cards, the status filter defaulting to Active, and the premium-over-spot column.

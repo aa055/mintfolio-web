@@ -276,6 +276,8 @@ export interface Transaction {
   realized_pl: string | null;
   item_count: number;
   receipt_count: number;
+  payment_method: PaymentMethod | null;
+  item_labels: string[];
   metals: Metal[];
 }
 
