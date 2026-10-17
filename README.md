@@ -72,6 +72,18 @@ docs/
 
 ---
 
+## Tests
+
+End-to-end browser tests (Playwright + axe accessibility checks) live in [`e2e/`](./e2e/README.md). With the API and `npm run dev` running:
+
+```bash
+npx playwright install chromium   # once
+cp .env.e2e.example .env.e2e      # once; set SUPABASE_SERVICE_ROLE_KEY
+npm run test:e2e
+```
+
+---
+
 ## Conventions
 
 - **Use semantic color tokens** (`bg-primary`, `text-foreground`), not brand scales (`bg-olive-600`), in component code. The design system maps tokens to brand colors so themes can shift in one place.

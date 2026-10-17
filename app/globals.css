@@ -19,7 +19,7 @@
     /* Text */
     --foreground: 40 54 24;          /* forest-900 */
     --foreground-muted: 56 74 44;    /* forest-700 */
-    --foreground-subtle: 93 119 71;  /* forest-500 */
+    --foreground-subtle: 88 113 67;  /* 4.9:1 on surface-muted, 5.4:1 on surface */
 
     /* Lines */
     --border: 233 224 175;           /* cornsilk-300 mixed */
