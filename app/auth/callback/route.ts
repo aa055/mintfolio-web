@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { apiFetch } from "@/lib/api-client";
+import { syncBody } from "@/lib/auth/sync";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
     return NextResponse.redirect(
       `${origin}/login?error=${encodeURIComponent(error.message)}`,
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    await apiFetch("/auth/sync", { method: "POST", body: {} });
+    await apiFetch("/auth/sync", { method: "POST", body: syncBody(data.user) });
   } catch (err) {
     console.error("[auth/callback] /auth/sync failed:", err);
     // Continue to the destination — dashboard self-heals via GET /auth/me.

@@ -9,6 +9,7 @@ import { ReceiptUploader } from "@/components/purchases/receipt-uploader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ApiError, apiFetch } from "@/lib/api-client";
+import { getMe } from "@/lib/me";
 import type { PortfolioSummary, Purchase } from "@/lib/api-types";
 import { cn, formatCurrency, formatSignedCurrency, plTone } from "@/lib/utils";
 
@@ -34,10 +35,12 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
   }
 
   // Current values come from the portfolio summary; the page still works without them.
-  const summary = await apiFetch<PortfolioSummary>(
-    `/portfolios/${purchase.portfolio_id}/summary`,
-    { method: "GET" },
-  ).catch(() => null);
+  const [summary, me] = await Promise.all([
+    apiFetch<PortfolioSummary>(`/portfolios/${purchase.portfolio_id}/summary`, {
+      method: "GET",
+    }).catch(() => null),
+    getMe().catch(() => null),
+  ]);
   const values = new Map(summary?.holdings.map((h) => [h.id, h]));
 
   const cur = purchase.purchase_currency;
@@ -119,7 +122,13 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
               </p>
             ) : null}
           </div>
-          <PurchaseItems rows={rows} currency={cur} purchaseDate={purchase.purchase_date} />
+          <PurchaseItems
+            rows={rows}
+            currency={cur}
+            purchaseDate={purchase.purchase_date}
+            purchaseDateLabel={formatDay(purchase.purchase_date)}
+            weightUnit={me?.user.weight_unit ?? "g"}
+          />
         </CardContent>
       </Card>
 

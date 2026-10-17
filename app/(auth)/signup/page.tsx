@@ -33,6 +33,7 @@ export default function SignupPage() {
           variant="accent"
           passwordHint="At least 8 characters."
           passwordMinLength={8}
+          withName
         />
 
         <p className="text-center text-caption text-foreground-muted">

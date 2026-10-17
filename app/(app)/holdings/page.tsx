@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { HoldingsTable, type HoldingRow } from "@/components/holdings/holdings-table";
+import { premiumFrom } from "@/components/holdings/premium-note";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import type { MeResponse, PortfolioSummary, PurchaseListResponse } from "@/lib/api-types";
 
@@ -68,6 +69,7 @@ export default async function HoldingsPage({
               : null,
         status: h.status,
         sale: h.sale,
+        premium: premiumFrom(v),
       };
     }),
   );
@@ -78,6 +80,12 @@ export default async function HoldingsPage({
   );
 
   return (
-    <HoldingsTable rows={rows} currency={me.user.preferred_currency} initialParams={initial} />
+    <HoldingsTable
+      rows={rows}
+      currency={me.user.preferred_currency}
+      metals={summary?.by_metal ?? []}
+      initialParams={initial}
+      weightUnit={me.user.weight_unit}
+    />
   );
 }
