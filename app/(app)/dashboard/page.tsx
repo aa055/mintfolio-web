@@ -192,7 +192,7 @@ function EmptyState() {
   return (
     <Card>
       <CardContent className="flex flex-col items-center gap-3 px-6 py-16 text-center">
-        <span className="grid h-14 w-14 place-items-center rounded-full bg-cornsilk-200 text-foreground-muted">
+        <span className="grid h-14 w-14 place-items-center rounded-full bg-surface-muted text-foreground-muted">
           <ReceiptText className="h-6 w-6" strokeWidth={1.75} />
         </span>
         <h2 className="text-h3 font-semibold text-foreground">No purchases yet</h2>

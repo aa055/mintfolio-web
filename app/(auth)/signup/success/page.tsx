@@ -14,7 +14,7 @@ export default function SignupSuccessPage() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <div className="mb-3 grid h-11 w-11 place-items-center rounded-md bg-olive-100 text-olive-800">
+        <div className="mb-3 grid h-11 w-11 place-items-center rounded-md bg-primary/10 text-primary">
           <Mail className="h-5 w-5" strokeWidth={1.75} />
         </div>
         <CardTitle className="font-display text-h1 font-medium tracking-tight">
