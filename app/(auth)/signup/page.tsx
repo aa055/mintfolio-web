@@ -16,7 +16,7 @@ export default function SignupPage() {
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle className="font-display text-h1 font-medium tracking-tight">
-          Create your portfolio
+          <h1>Create your portfolio</h1>
         </CardTitle>
         <CardDescription>
           Start tracking your gold and silver in a calmer place than a spreadsheet.

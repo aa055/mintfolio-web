@@ -20,7 +20,7 @@ export default function LoginPage({
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle className="font-display text-h1 font-medium tracking-tight">
-          Welcome back
+          <h1>Welcome back</h1>
         </CardTitle>
         <CardDescription>Sign in to your Mintfolio portfolio.</CardDescription>
       </CardHeader>
