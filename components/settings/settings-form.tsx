@@ -273,7 +273,7 @@ function ModeOption({
     <label
       className={cn(
         "flex cursor-pointer items-start gap-3 rounded-md border px-4 py-3 transition-colors",
-        checked ? "border-primary bg-olive-50" : "border-border hover:bg-surface-muted",
+        checked ? "border-primary bg-primary/10" : "border-border hover:bg-surface-muted",
       )}
     >
       <input

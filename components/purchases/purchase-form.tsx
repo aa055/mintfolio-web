@@ -595,8 +595,8 @@ export function PurchaseForm({
                 </Field>
 
                 {mathWarning ? (
-                  <div className="flex items-start gap-2 rounded-md border border-caramel-300 bg-caramel-50 px-3 py-2 text-body-sm text-caramel-900">
-                    <CircleAlert className="h-4 w-4 shrink-0 translate-y-[2px] text-caramel-700" />
+                  <div className="flex items-start gap-2 rounded-md border border-notice-border bg-notice px-3 py-2 text-body-sm text-notice-foreground">
+                    <CircleAlert className="h-4 w-4 shrink-0 translate-y-[2px] text-notice-icon" />
                     <p>{mathWarning}</p>
                   </div>
                 ) : null}
@@ -633,8 +633,8 @@ export function PurchaseForm({
                 <ReceiptStrip files={purchase.files} />
               </div>
             ) : null}
-            <div className="rounded-md border border-dashed border-border-strong bg-cornsilk-50 p-6 text-center">
-              <span className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-cornsilk-200 text-foreground-muted">
+            <div className="rounded-md border border-dashed border-border-strong bg-surface-muted/40 p-6 text-center">
+              <span className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-surface-muted text-foreground-muted">
                 <Paperclip className="h-5 w-5" strokeWidth={1.75} />
               </span>
               <p className="mt-3 text-body-sm text-foreground">
