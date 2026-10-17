@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Area,
   CartesianGrid,
@@ -15,6 +15,7 @@ import {
 
 import { Card, CardContent } from "@/components/ui/card";
 import type { PortfolioPoint } from "@/lib/api-types";
+import { useChartColors } from "@/lib/use-chart-colors";
 import {
   cn,
   formatCompactCurrency,
@@ -41,26 +42,6 @@ interface Point {
   value: number;
   invested: number;
   realized: number;
-}
-
-/** Chart colours come from the theme's CSS variables (SVG attributes can't read var()). */
-function useChartColors() {
-  const [colors, setColors] = useState<Record<
-    "value" | "baseline" | "grid" | "text" | "surface",
-    string
-  > | null>(null);
-  useEffect(() => {
-    const css = getComputedStyle(document.documentElement);
-    const rgb = (name: string) => `rgb(${css.getPropertyValue(name).trim()})`;
-    setColors({
-      value: rgb("--primary"),
-      baseline: rgb("--chart-baseline"),
-      grid: rgb("--border"),
-      text: rgb("--foreground-muted"),
-      surface: rgb("--surface"),
-    });
-  }, []);
-  return colors;
 }
 
 function sliceRange(points: Point[], range: Range): Point[] {
@@ -232,9 +213,9 @@ export function PerformanceChart({
                     type="monotone"
                     dataKey="value"
                     name="Value"
-                    stroke={colors.value}
+                    stroke={colors.primary}
                     strokeWidth={2}
-                    fill={colors.value}
+                    fill={colors.primary}
                     fillOpacity={0.1}
                     activeDot={{ r: 4, strokeWidth: 2, stroke: colors.surface }}
                     isAnimationActive={false}

@@ -3,7 +3,14 @@ import { ArrowRight, CircleAlert } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import type { MetalSummary, PortfolioSummary } from "@/lib/api-types";
-import { cn, formatCurrency, formatSignedCurrency, formatWeight, plTone } from "@/lib/utils";
+import {
+  cn,
+  formatCurrency,
+  formatSignedCurrency,
+  formatWeight,
+  plTone,
+  type DisplayWeightUnit,
+} from "@/lib/utils";
 
 const METAL_LABEL = { gold: "Gold", silver: "Silver" } as const;
 const METAL_SWATCH = { gold: "bg-series-gold", silver: "bg-series-silver" } as const;
@@ -12,7 +19,13 @@ const METAL_SWATCH = { gold: "bg-series-gold", silver: "bg-series-silver" } as c
  * Part-to-whole: one stacked bar of each metal's share of current value,
  * with a legend and a per-metal list that doubles as its accessible view.
  */
-export function AllocationCard({ summary }: { summary: PortfolioSummary }) {
+export function AllocationCard({
+  summary,
+  weightUnit,
+}: {
+  summary: PortfolioSummary;
+  weightUnit: DisplayWeightUnit;
+}) {
   const cur = summary.currency;
   // Fixed order so each metal keeps its position and colour.
   const metals = (["gold", "silver"] as const)
@@ -68,7 +81,7 @@ export function AllocationCard({ summary }: { summary: PortfolioSummary }) {
                     {METAL_LABEL[m.metal]}
                   </p>
                   <p className="mt-0.5 text-caption text-foreground-muted num">
-                    {formatWeight(Number(m.grams), "g")}
+                    {formatWeight(Number(m.grams), weightUnit)}
                     {total > 0 ? ` · ${((value / total) * 100).toFixed(1)}% of value` : ""}
                   </p>
                 </div>

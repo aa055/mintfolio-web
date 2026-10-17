@@ -2,7 +2,15 @@ import { TrendingDown, TrendingUp } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import type { PortfolioSummary } from "@/lib/api-types";
-import { cn, formatCurrency, formatPercent, formatSignedCurrency, formatWeight, plTone } from "@/lib/utils";
+import {
+  cn,
+  formatCurrency,
+  formatPercent,
+  formatSignedCurrency,
+  formatWeight,
+  plTone,
+  type DisplayWeightUnit,
+} from "@/lib/utils";
 
 /**
  * The four headline numbers: invested, current value, today's move and
@@ -12,16 +20,18 @@ import { cn, formatCurrency, formatPercent, formatSignedCurrency, formatWeight, 
 export function SummaryTiles({
   summary,
   todayLabel,
+  weightUnit,
 }: {
   summary: PortfolioSummary;
   todayLabel: string | null;
+  weightUnit: DisplayWeightUnit;
 }) {
   const cur = summary.currency;
   const today = summary.today_change;
   const allTime = Number(summary.all_time_pl);
   const allTimePct = summary.all_time_pl_pct === null ? null : Number(summary.all_time_pl_pct);
   const weights = summary.by_metal
-    .map((m) => `${m.metal === "gold" ? "Gold" : "Silver"} ${formatWeight(Number(m.grams), "g")}`)
+    .map((m) => `${m.metal === "gold" ? "Gold" : "Silver"} ${formatWeight(Number(m.grams), weightUnit)}`)
     .join(" · ");
 
   return (
