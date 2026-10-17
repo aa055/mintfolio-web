@@ -220,27 +220,43 @@ The charts on Home and Rates depend on this, so it comes first.
   - **Not built:** a custom date range on Transactions; the presets (7D/1M/3M/1Y/All) cover it for now.
 
 ### Step 4: Holdings revamp
-- [ ] Per-metal summary cards, the status filter defaulting to Active, and the premium-over-spot column.
-- [ ] **API:** premium per holding. It uses `spot_rate_at_purchase` if the user entered one, otherwise the backfilled rate on the purchase date.
+- [x] Per-metal summary cards, the status filter defaulting to Active, and the premium-over-spot column.
+- [x] **API:** premium per holding. It uses `spot_rate_at_purchase` if the user entered one, otherwise the backfilled rate on the purchase date.
 - **Done when:** premium is right for an item with an entered spot and for one without (unit test).
+- **Result (2026-10-12):** done; 2 new unit tests plus 7 browser checks pass.
+  - **Premium checked by hand:** the API's premiums match an independent calculation from the raw price rows to the cent.
+  - **Premium sits under the cost, not in its own column,** so it stays visible beside the sidebar. The full detail is in a tooltip, and in hidden text for screen readers.
+  - **Dealer merged into the Purchased column,** so the table fits at 1280px.
+  - **Metal cards say they cover your currency only;** their values can't mix currencies.
+  - **Performance:** price history now loads in one query per page. Each Supabase round trip takes about 350 ms from Dubai to Sydney, so the real fix is hosting the API and database together at deploy time.
 
 ### Step 5: Metal rates page
-- [ ] Gold/silver switch, header prices, chart with ranges, period and 52-week stats, karat/purity table, data credit.
+- [x] Gold/silver switch, header prices, chart with ranges, period and 52-week stats, karat/purity table, data credit.
 - **Done when:** the stats match the raw history, and the karat rows equal the pure rate × k/24.
+- **Result (2026-10-17):** 7 browser checks pass against figures computed separately from the raw price rows. Those figures were the latest rate, tola/oz/karat rows, 52-week high/low and 5-year high.
+  - **No new API:** the page loads 5 years of both metals once, so switching metal or range is instant.
+  - **Shared chart colours:** both charts now read their colours through `lib/use-chart-colors.ts`.
+  - **Silver rows:** Fine (pure), 999 and 925. The 999 row is pure × 0.999, the same rule Holdings uses to value a 999 item.
+  - **Missing day filled:** 12 Oct had no GoldAPI price because the unpushed old schedule ran late again. It was back-filled from metals.dev.
 
 ### Step 6: Profile, signup name, weight unit
-- [ ] **Signup** gets a name field.
-- [ ] **Sync** passes `user_metadata` (name, Google photo) into `/auth/sync`, and that also backfills existing users on their next login.
-- [ ] **API:**
+- [x] **Signup** gets a name field.
+- [x] **Sync** passes `user_metadata` (name, Google photo) into `/auth/sync`, and that also backfills existing users on their next login.
+- [x] **API:**
   - `users.avatar_path` and `users.weight_unit` columns.
   - Avatar sign-upload / register / delete endpoints, using a new private `avatars` bucket (images only, 2 MB).
   - `PATCH /auth/me` accepts `weight_unit`.
-- [ ] **UI:**
+- [x] **UI:**
   - `/profile` page.
   - The avatar shows in the top bar.
   - The weight unit applies to every displayed weight through `formatWeight`.
   - Display name moves from Settings to Profile.
 - **Done when:** a photo can be uploaded, replaced and removed; the initials fallback works; and every page shows weights in tola after switching.
+- **Result (2026-10-17):** 24 API checks and 12 browser checks pass, plus the Step 3 and 4 suites as regressions.
+  - **Login no longer overwrites names:** `/auth/sync` only fills an empty name or photo. Before, it replaced the stored name with the login's name, which would have undone Profile edits at every login.
+  - **Existing users get their name:** they're filled from Supabase metadata at their next login.
+  - **Photos:** go in a private `avatars` bucket (JPG/PNG/WebP, 2 MB) and are shown through a signed URL that lasts an hour. A new photo deletes the old file.
+  - **Weight unit applies everywhere:** all 9 places that format a weight use it, including "Avg cost / tola".
 
 ### Step 7: Dark mode
 - [ ] Find out why forcing the `.dark` class had no visible effect, and fix the tokens. Replace hard-coded brand classes (`bg-cornsilk-*`, `text-caramel-900`, …) with semantic tokens where needed.
