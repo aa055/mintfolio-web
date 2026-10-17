@@ -27,7 +27,8 @@ export default async function AppLayout({
   const menuUser: MenuUser = {
     name: me?.user.display_name ?? meta.full_name ?? meta.name ?? null,
     email: user.email ?? me?.user.email ?? "",
-    avatarUrl: me?.user.avatar_url ?? meta.avatar_url ?? meta.picture ?? null,
+    // Uploaded photo first, then the Google photo, then initials.
+    avatarUrl: me?.user.photo_url ?? me?.user.avatar_url ?? meta.avatar_url ?? meta.picture ?? null,
   };
 
   return (

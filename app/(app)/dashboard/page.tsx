@@ -15,7 +15,9 @@ import type {
   PortfolioSummary,
   TransactionList,
 } from "@/lib/api-types";
+import { syncBody } from "@/lib/auth/sync";
 import { getMe } from "@/lib/me";
+import { createClient } from "@/lib/supabase/server";
 
 /** "1 Sep 2026" — date-only ISO strings are UTC midnight, so format in UTC. */
 function formatDay(iso: string, withYear = true) {
@@ -60,7 +62,14 @@ async function loadMe(): Promise<{ me: MeResponse | null; error: string | null }
     if (err instanceof ApiError && err.status === 404) {
       // First visit after signup: create the user + portfolio rows.
       try {
-        const me = await apiFetch<MeResponse>("/auth/sync", { method: "POST", body: {} });
+        const supabase = await createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        const me = await apiFetch<MeResponse>("/auth/sync", {
+          method: "POST",
+          body: syncBody(user),
+        });
         return { me, error: null };
       } catch (inner) {
         return { me: null, error: apiErrorMessage(inner) };
@@ -132,6 +141,7 @@ export default async function HomePage() {
           <SummaryNotices summary={summary} />
           <SummaryTiles
             summary={summary}
+            weightUnit={me.user.weight_unit}
             todayLabel={
               summary.today_change ? formatDay(summary.today_change.previous_day, false) : null
             }
@@ -143,7 +153,7 @@ export default async function HomePage() {
           />
           <div className="grid gap-6 lg:grid-cols-5">
             <div className="lg:col-span-2">
-              <AllocationCard summary={summary} />
+              <AllocationCard summary={summary} weightUnit={me.user.weight_unit} />
             </div>
             <div className="lg:col-span-3">
               <RecentTransactions transactions={transactions} today={now.isoDate} />
