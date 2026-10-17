@@ -63,13 +63,18 @@ export function formatPercent(value: number, fractionDigits = 2) {
   return `${sign}${Math.abs(value).toFixed(fractionDigits)}%`;
 }
 
-export function formatWeight(
-  grams: number,
-  unit: "g" | "oz" = "g",
-  fractionDigits = 2,
-) {
-  const value = unit === "oz" ? grams / 31.1035 : grams;
-  return `${value.toFixed(fractionDigits)} ${unit}`;
+/** How weights are displayed (a user preference). Stored weights are grams. */
+export type DisplayWeightUnit = "g" | "oz" | "tola";
+
+const WEIGHT_UNITS: Record<DisplayWeightUnit, { grams: number; label: string; digits: number }> = {
+  g: { grams: 1, label: "g", digits: 2 },
+  oz: { grams: 31.1035, label: "oz", digits: 3 }, // troy ounce
+  tola: { grams: 11.6638, label: "tola", digits: 3 },
+};
+
+export function formatWeight(grams: number, unit: DisplayWeightUnit = "g", fractionDigits?: number) {
+  const u = WEIGHT_UNITS[unit] ?? WEIGHT_UNITS.g;
+  return `${(grams / u.grams).toFixed(fractionDigits ?? u.digits)} ${u.label}`;
 }
 
 /** Today as YYYY-MM-DD in the browser's timezone (toISOString alone is UTC). */

@@ -8,10 +8,12 @@ export interface User {
   id: string;
   email: string;
   display_name: string | null;
-  avatar_url: string | null;
+  avatar_url: string | null; // e.g. Google photo
+  photo_url: string | null; // signed URL of an uploaded photo (preferred)
   preferred_currency: string;
   timezone: string;
   default_pricing_mode: "live" | "manual";
+  weight_unit: "g" | "oz" | "tola";
   manual_gold_rate_per_gram: string | null;
   manual_silver_rate_per_gram: string | null;
   manual_rates_currency: string | null;
@@ -154,6 +156,7 @@ export interface UserSettingsPayload {
   preferred_currency?: string;
   timezone?: string;
   default_pricing_mode?: "live" | "manual";
+  weight_unit?: "g" | "oz" | "tola";
 }
 
 export interface ManualRatesPayload {
@@ -194,6 +197,7 @@ export interface Rate {
 export interface MetalSummary {
   metal: Metal;
   grams: string;
+  pure_grams: string;
   current_value: string;
   cost_basis: string;
 }
@@ -203,6 +207,11 @@ export interface HoldingValue {
   current_value: string | null;
   unrealized_pl: string | null;
   realized_pl: string | null;
+  // Premium over spot at purchase (null when no spot rate is known)
+  melt_value_at_purchase: string | null;
+  premium: string | null;
+  premium_pct: string | null;
+  premium_source: "entered" | "market" | null;
 }
 
 export interface MarketRate {
@@ -283,4 +292,20 @@ export interface Transaction {
 
 export interface TransactionList {
   transactions: Transaction[];
+}
+
+// ---------------- Price history ----------------
+
+export interface PricePoint {
+  day: string;
+  rate_per_gram: string; // pure metal (24K gold / fine silver), per gram
+}
+
+export interface PriceHistoryResponse {
+  metal: Metal;
+  purity: string;
+  currency: string;
+  range: string;
+  points: PricePoint[];
+  sources: string[]; // "goldapi" | "metalsdev"
 }
