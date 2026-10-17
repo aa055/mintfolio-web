@@ -27,11 +27,15 @@
     --ring: 148 165 83;              /* olive-400 */
 
     /* Brand */
-    --primary: 96 108 56;            /* olive-600 */
+    --primary: 96 108 56;            /* olive-600 — light text on it 5.4:1 */
     --primary-foreground: 254 250 224;
+    --primary-hover: 79 90 44;       /* darker on hover: 7.1:1 */
 
-    --accent: 188 108 37;            /* copper-600 */
+    /* Between copper-600 and -700: light text on it 4.9:1 (copper-600 was 3.8:1).
+       Chart gold stays copper-600 via --series-gold. */
+    --accent: 163 90 29;             /* #a35a1d */
     --accent-foreground: 254 250 224;
+    --accent-hover: 138 75 23;       /* darker on hover: 6.4:1 */
 
     --secondary: 221 161 94;         /* caramel-400 */
     --secondary-foreground: 40 54 24;
@@ -46,43 +50,22 @@
     /* Chart series — one fixed hue per metal (CVD-validated pair) */
     --series-gold: 188 108 37;       /* #bc6c25 copper-600 */
     --series-silver: 42 120 214;     /* #2a78d6 */
-    --chart-baseline: 133 130 117;   /* #858275 — recessive comparison line (3.86:1) */
+    /* Home chart: value line + muted "invested" reference line. Validated
+       with the dataviz checker on #fff: ΔE 16.3, both >= 3:1. Separate from
+       --primary (brand olive), which reads as grey as a chart line. */
+    --chart-value: 95 122 34;        /* #5f7a22 */
+    --chart-baseline: 150 147 138;   /* #96938a */
+
+    /* Notices (caveats, warnings) */
+    --notice: 253 248 239;           /* caramel-50 */
+    --notice-border: 236 189 114;    /* caramel-300 */
+    --notice-foreground: 108 60 34;  /* caramel-900 */
+    --notice-icon: 162 88 39;        /* caramel-700 */
+
+    color-scheme: light;
 
     /* shadcn compatibility */
     --radius: 0.625rem;              /* 10px — matches radius-md */
-  }
-
-  .dark {
-    --background: 40 54 24;          /* forest-900 */
-    --surface: 47 61 38;             /* forest-800 */
-    --surface-muted: 56 74 44;       /* forest-700 */
-
-    --foreground: 254 250 224;       /* cornsilk-100 */
-    --foreground-muted: 207 212 192;
-    --foreground-subtle: 154 176 129;
-
-    --border: 56 74 44;              /* forest-700 */
-    --border-strong: 122 148 94;     /* forest-400 / olive-ish */
-    --ring: 179 192 121;             /* olive-300 */
-
-    --primary: 148 165 83;           /* olive-400 — lifts off dark bg */
-    --primary-foreground: 40 54 24;
-
-    --accent: 220 139 58;            /* copper-400 */
-    --accent-foreground: 40 54 24;
-
-    --secondary: 209 135 55;         /* caramel-500 */
-    --secondary-foreground: 40 54 24;
-
-    --success: 148 165 83;
-    --success-foreground: 40 54 24;
-
-    --destructive: 194 90 63;
-    --destructive-foreground: 254 250 224;
-
-    --series-gold: 201 122 46;       /* #c97a2e */
-    --series-silver: 57 135 229;     /* #3987e5 */
-    --chart-baseline: 168 165 150;   /* #a8a596 (4.67:1 on forest-800) */
   }
 
   /* Element-level defaults */
@@ -119,6 +102,58 @@
       transition-duration: 50ms !important;
     }
   }
+}
+
+/* ---------------------------------------------------------------
+ * Dark theme — deliberately OUTSIDE @layer: Tailwind tree-shakes
+ * layered CSS whose class it never sees in the source, and the
+ * `dark` class is only ever added at runtime (theme script), so
+ * inside @layer base these rules were silently dropped.
+ * Text pairs checked against WCAG AA on surface (#2f3d26) and
+ * background (#283618); ratios are on the surface.
+ * ------------------------------------------------------------- */
+
+.dark {
+  --background: 40 54 24;          /* forest-900 */
+  --surface: 47 61 38;             /* forest-800 */
+  --surface-muted: 56 74 44;       /* forest-700 */
+
+  --foreground: 254 250 224;       /* cornsilk-100 — 11.0:1 */
+  --foreground-muted: 207 212 192; /* 7.6:1 */
+  --foreground-subtle: 169 189 146;/* 5.7:1 (4.8:1 on surface-muted) */
+
+  --border: 56 74 44;              /* forest-700 */
+  --border-strong: 122 148 94;
+  --ring: 179 192 121;             /* olive-300 */
+
+  --primary: 168 189 95;           /* 5.6:1 as text; dark text on it 6.2:1 */
+  --primary-foreground: 40 54 24;
+  --primary-hover: 188 207 119;    /* lighter on hover: 7.6:1 */
+
+  --accent: 220 139 58;            /* copper-400; dark text on it 4.8:1 */
+  --accent-foreground: 40 54 24;
+  --accent-hover: 232 163 92;      /* lighter on hover: 6.0:1 */
+
+  --secondary: 209 135 55;         /* caramel-500 */
+  --secondary-foreground: 40 54 24;
+
+  --success: 168 189 95;           /* gains — 5.6:1 */
+  --success-foreground: 40 54 24;
+
+  --destructive: 240 154 128;      /* losses, delete — 5.3:1 (was 2.7:1) */
+  --destructive-foreground: 40 54 24;
+
+  --series-gold: 201 122 46;       /* #c97a2e — CVD-validated on forest-800 */
+  --series-silver: 57 135 229;     /* #3987e5 */
+  --chart-value: 110 168 36;       /* #6ea824 — validated on #2f3d26: ΔE 16.0, both >= 3:1 */
+  --chart-baseline: 138 135 123;   /* #8a877b */
+
+  --notice: 66 60 30;
+  --notice-border: 131 96 48;
+  --notice-foreground: 244 216 164;/* caramel-200 */
+  --notice-icon: 221 161 94;       /* caramel-400 */
+
+  color-scheme: dark;
 }
 
 /* ---------------------------------------------------------------

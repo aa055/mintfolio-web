@@ -105,7 +105,7 @@ export default function Home() {
           id="preview"
           className="mx-auto mt-20 max-w-5xl rounded-xl border border-border bg-surface p-2 shadow-lg"
         >
-          <div className="rounded-lg bg-cornsilk-50 p-8 md:p-12">
+          <div className="rounded-lg bg-surface-muted/40 p-8 md:p-12">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-micro font-semibold uppercase tracking-wider text-foreground-subtle">
@@ -125,7 +125,7 @@ export default function Home() {
                 </p>
               </div>
               <div className="hidden sm:flex flex-col items-end gap-1">
-                <span className="rounded-full bg-olive-100 px-2.5 py-0.5 text-micro font-semibold uppercase tracking-wider text-olive-800">
+                <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-micro font-semibold uppercase tracking-wider text-primary">
                   Live · cached today
                 </span>
                 <span className="text-caption text-foreground-subtle">
@@ -164,7 +164,7 @@ export default function Home() {
           {FEATURES.map((feature) => (
             <Card key={feature.title}>
               <CardContent className="p-6">
-                <div className="grid h-11 w-11 place-items-center rounded-md bg-olive-100 text-olive-800">
+                <div className="grid h-11 w-11 place-items-center rounded-md bg-primary/10 text-primary">
                   <feature.icon className="h-5 w-5" strokeWidth={1.75} />
                 </div>
                 <h3 className="mt-5 text-h3 font-semibold text-foreground">
