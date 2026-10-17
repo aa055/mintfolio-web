@@ -42,7 +42,7 @@ export function Sidebar() {
           href="/purchases/new"
           className={cn(
             "group relative mb-3 flex h-10 items-center justify-center gap-2 rounded-md bg-accent text-body-sm font-medium text-accent-foreground shadow-sm",
-            "transition-colors hover:bg-copper-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            "transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           )}
         >
           <Plus className="h-4 w-4" aria-hidden />

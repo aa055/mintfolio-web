@@ -2,17 +2,20 @@
 
 import Link from "next/link";
 import { useTransition } from "react";
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, Monitor, Moon, Settings, Sun, User } from "lucide-react";
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { logoutAction } from "@/lib/auth/actions";
+import { useTheme, type Theme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 export interface MenuUser {
@@ -53,6 +56,7 @@ export function UserAvatar({ user, className }: { user: MenuUser; className?: st
 
 export function UserMenu({ user }: { user: MenuUser }) {
   const [pending, startTransition] = useTransition();
+  const [theme, setTheme] = useTheme();
 
   return (
     <DropdownMenu>
@@ -82,6 +86,24 @@ export function UserMenu({ user }: { user: MenuUser }) {
             Settings
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="pb-1 text-caption font-medium text-foreground-subtle">
+          Theme
+        </DropdownMenuLabel>
+        <DropdownMenuRadioGroup value={theme ?? undefined} onValueChange={(v) => setTheme(v as Theme)}>
+          <DropdownMenuRadioItem value="light">
+            <Sun />
+            Light
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="dark">
+            <Moon />
+            Dark
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="system">
+            <Monitor />
+            System
+          </DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           disabled={pending}
