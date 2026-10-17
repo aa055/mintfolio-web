@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Check } from "lucide-react";
@@ -21,6 +22,11 @@ import { cn, formatCurrency } from "@/lib/utils";
 
 const CURRENCIES = ["AED", "USD", "EUR", "GBP", "SAR", "INR"] as const;
 const PURE_PURITY = { gold: "24K", silver: "999" } as const;
+const WEIGHT_UNITS = [
+  ["g", "Grams (g)"],
+  ["oz", "Troy ounces (oz)"],
+  ["tola", "Tola (11.66 g)"],
+] as const;
 
 type Status = { kind: "saved" } | { kind: "error"; message: string } | null;
 
@@ -53,8 +59,8 @@ function PreferencesCard({ user, timezones }: { user: User; timezones: string[] 
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [status, setStatus] = useState<Status>(null);
-  const [displayName, setDisplayName] = useState(user.display_name ?? "");
   const [currency, setCurrency] = useState(user.preferred_currency);
+  const [weightUnit, setWeightUnit] = useState(user.weight_unit);
   const [timezone, setTimezone] = useState(user.timezone);
   const [mode, setMode] = useState(user.default_pricing_mode);
 
@@ -63,8 +69,8 @@ function PreferencesCard({ user, timezones }: { user: User; timezones: string[] 
     setStatus(null);
     startTransition(async () => {
       const result = await updateSettingsAction({
-        display_name: displayName.trim() || null,
         preferred_currency: currency,
+        weight_unit: weightUnit,
         timezone: timezone.trim(),
         default_pricing_mode: mode,
       });
@@ -80,14 +86,6 @@ function PreferencesCard({ user, timezones }: { user: User; timezones: string[] 
           <h2 className="text-h3 font-semibold text-foreground">Preferences</h2>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Display name" htmlFor="display_name">
-              <Input
-                id="display_name"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                maxLength={200}
-              />
-            </Field>
             <Field
               label="Currency"
               hint="Dashboard totals use this. Purchases in other currencies are listed but not totalled."
@@ -119,7 +117,31 @@ function PreferencesCard({ user, timezones }: { user: User; timezones: string[] 
                 ))}
               </datalist>
             </Field>
+            <Field label="Show weights in" hint="Display only — weights are stored in grams.">
+              <Select
+                value={weightUnit}
+                onValueChange={(v) => setWeightUnit(v as User["weight_unit"])}
+              >
+                <SelectTrigger aria-label="Weight unit">
+                  <SelectValue>{WEIGHT_UNITS.find(([k]) => k === weightUnit)?.[1]}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {WEIGHT_UNITS.map(([k, label]) => (
+                    <SelectItem key={k} value={k}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
           </div>
+          <p className="text-caption text-foreground-subtle">
+            Your name and photo are on your{" "}
+            <Link href="/profile" className="text-primary hover:underline">
+              Profile
+            </Link>
+            .
+          </p>
 
           <fieldset className="space-y-2">
             <legend className="text-body-sm font-medium text-foreground">Pricing</legend>

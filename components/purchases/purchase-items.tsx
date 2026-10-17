@@ -1,6 +1,14 @@
+import { PremiumNote, premiumFrom } from "@/components/holdings/premium-note";
 import { SellButton, UndoSaleButton } from "@/components/purchases/holding-actions";
 import type { Holding, HoldingValue } from "@/lib/api-types";
-import { cn, formatCurrency, formatSignedCurrency, formatWeight, plTone } from "@/lib/utils";
+import {
+  cn,
+  formatCurrency,
+  formatSignedCurrency,
+  formatWeight,
+  plTone,
+  type DisplayWeightUnit,
+} from "@/lib/utils";
 
 export interface ItemRow {
   item: Holding;
@@ -20,10 +28,14 @@ export function PurchaseItems({
   rows,
   currency,
   purchaseDate,
+  purchaseDateLabel,
+  weightUnit,
 }: {
   rows: ItemRow[];
   currency: string;
   purchaseDate: string;
+  purchaseDateLabel: string;
+  weightUnit: DisplayWeightUnit;
 }) {
   return (
     <>
@@ -48,10 +60,15 @@ export function PurchaseItems({
                   <ItemDescription row={r} />
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-right num text-foreground-muted">
-                  <Weight item={r.item} />
+                  <Weight item={r.item} unit={weightUnit} />
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-right num text-foreground">
                   {formatCurrency(Number(r.item.purchase_price), currency)}
+                  <PremiumNote
+                    premium={premiumFrom(r.value)}
+                    currency={currency}
+                    purchaseDateLabel={purchaseDateLabel}
+                  />
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-right num text-foreground">
                   {r.value?.current_value != null
@@ -77,12 +94,17 @@ export function PurchaseItems({
               <div className="min-w-0">
                 <ItemDescription row={r} />
                 <p className="text-caption text-foreground-muted num">
-                  <Weight item={r.item} inline />
+                  <Weight item={r.item} unit={weightUnit} inline />
                 </p>
               </div>
               <div className="shrink-0 text-right text-body-sm num">
                 <p className="text-foreground">
                   {formatCurrency(Number(r.item.purchase_price), currency)}
+                  <PremiumNote
+                    premium={premiumFrom(r.value)}
+                    currency={currency}
+                    purchaseDateLabel={purchaseDateLabel}
+                  />
                 </p>
                 {r.value?.current_value != null ? (
                   <p className="text-caption text-foreground-muted">
@@ -133,15 +155,23 @@ function ItemDescription({ row }: { row: ItemRow }) {
   );
 }
 
-function Weight({ item, inline = false }: { item: Holding; inline?: boolean }) {
+function Weight({
+  item,
+  unit,
+  inline = false,
+}: {
+  item: Holding;
+  unit: DisplayWeightUnit;
+  inline?: boolean;
+}) {
   const total = Number(item.weight_grams) * item.quantity;
   return (
     <>
-      {formatWeight(total, "g")}
+      {formatWeight(total, unit)}
       {item.quantity > 1 ? (
         <span className={cn("text-caption text-foreground-subtle", !inline && "block")}>
           {inline ? " · " : ""}
-          {item.quantity} × {formatWeight(Number(item.weight_grams), "g")}
+          {item.quantity} × {formatWeight(Number(item.weight_grams), unit)}
         </span>
       ) : null}
     </>
