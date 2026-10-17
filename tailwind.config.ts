@@ -106,10 +106,12 @@ const config: Config = {
         primary: {
           DEFAULT: "rgb(var(--primary) / <alpha-value>)",
           foreground: "rgb(var(--primary-foreground) / <alpha-value>)",
+          hover: "rgb(var(--primary-hover) / <alpha-value>)",
         },
         accent: {
           DEFAULT: "rgb(var(--accent) / <alpha-value>)",
           foreground: "rgb(var(--accent-foreground) / <alpha-value>)",
+          hover: "rgb(var(--accent-hover) / <alpha-value>)",
         },
         secondary: {
           DEFAULT: "rgb(var(--secondary) / <alpha-value>)",
@@ -118,6 +120,12 @@ const config: Config = {
         series: {
           gold: "rgb(var(--series-gold) / <alpha-value>)",
           silver: "rgb(var(--series-silver) / <alpha-value>)",
+        },
+        notice: {
+          DEFAULT: "rgb(var(--notice) / <alpha-value>)",
+          border: "rgb(var(--notice-border) / <alpha-value>)",
+          foreground: "rgb(var(--notice-foreground) / <alpha-value>)",
+          icon: "rgb(var(--notice-icon) / <alpha-value>)",
         },
         success: {
           DEFAULT: "rgb(var(--success) / <alpha-value>)",
