@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, Pencil, Plus, Search, X } from "lucide-react";
 
+import { MetalCards } from "@/components/holdings/metal-cards";
+import { PremiumNote, type PremiumInfo } from "@/components/holdings/premium-note";
 import { SellButton, UndoSaleButton } from "@/components/purchases/holding-actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,8 +17,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { HoldingForm, HoldingStatus, Metal, Sale } from "@/lib/api-types";
-import { cn, formatCurrency, formatSignedCurrency, formatWeight, plTone } from "@/lib/utils";
+import type { HoldingForm, HoldingStatus, Metal, MetalSummary, Sale } from "@/lib/api-types";
+import {
+  cn,
+  formatCurrency,
+  formatSignedCurrency,
+  formatWeight,
+  plTone,
+  type DisplayWeightUnit,
+} from "@/lib/utils";
 
 export interface HoldingRow {
   id: string;
@@ -38,6 +47,7 @@ export interface HoldingRow {
   pl: number | null; // unrealized for active, realized for sold
   status: HoldingStatus;
   sale: Sale | null;
+  premium: PremiumInfo | null;
 }
 
 type SortKey = "date" | "weight" | "cost" | "value" | "pl";
@@ -56,7 +66,7 @@ interface Filters {
 const DEFAULTS: Filters = {
   q: "",
   metal: "all",
-  status: "all",
+  status: "active",
   form: "all",
   dealer: "all",
   sort: "date",
@@ -80,7 +90,7 @@ function parseFilters(params: Record<string, string>): Filters {
   return {
     q: params.q ?? "",
     metal: pick(params.metal, ["all", "gold", "silver"] as const, "all"),
-    status: pick(params.status, ["all", "active", "sold"] as const, "all"),
+    status: pick(params.status, ["all", "active", "sold"] as const, "active"),
     form: params.form ?? "all",
     dealer: params.dealer ?? "all",
     sort: pick(params.sort, SORT_KEYS, "date"),
@@ -128,12 +138,19 @@ function itemLabel(row: HoldingRow) {
 export function HoldingsTable({
   rows,
   currency,
+  metals,
   initialParams,
+  weightUnit,
 }: {
   rows: HoldingRow[];
   currency: string;
+  metals: MetalSummary[];
   initialParams: Record<string, string>;
+  weightUnit: DisplayWeightUnit;
 }) {
+  const otherCurrencyCount = rows.filter(
+    (r) => r.status === "active" && r.currency !== currency,
+  ).length;
   const [filters, setFilters] = useState<Filters>(() => parseFilters(initialParams));
 
   // After render, not inside the state update: Next.js patches history and
@@ -181,7 +198,7 @@ export function HoldingsTable({
   const filtered =
     filters.q !== "" ||
     filters.metal !== "all" ||
-    filters.status !== "all" ||
+    filters.status !== DEFAULTS.status ||
     filters.form !== "all" ||
     filters.dealer !== "all";
 
@@ -218,6 +235,12 @@ export function HoldingsTable({
         </Card>
       ) : (
         <>
+          <MetalCards
+            metals={metals}
+            currency={currency}
+            otherCurrencyCount={otherCurrencyCount}
+            weightUnit={weightUnit}
+          />
           <FilterBar
             filters={filters}
             update={update}
@@ -242,14 +265,14 @@ export function HoldingsTable({
               ) : (
                 <>
                   <div className="hidden sm:block">
-                    <Table rows={visible} filters={filters} toggleSort={toggleSort} />
+                    <Table rows={visible} filters={filters} toggleSort={toggleSort} unit={weightUnit} />
                   </div>
-                  <MobileList rows={visible} />
+                  <MobileList rows={visible} unit={weightUnit} />
                 </>
               )}
             </CardContent>
           </Card>
-          <Totals rows={visible} total={rows.length} currency={currency} />
+          <Totals rows={visible} total={rows.length} currency={currency} unit={weightUnit} />
         </>
       )}
     </div>
@@ -301,9 +324,9 @@ function FilterBar({
           value={filters.status}
           onChange={(v) => update({ status: v as Filters["status"] })}
           options={[
-            ["all", "Any status"],
             ["active", "Active"],
             ["sold", "Sold"],
+            ["all", "Active + sold"],
           ]}
         />
         <FilterSelect
@@ -382,10 +405,12 @@ function Table({
   rows,
   filters,
   toggleSort,
+  unit,
 }: {
   rows: HoldingRow[];
   filters: Filters;
   toggleSort: (key: SortKey) => void;
+  unit: DisplayWeightUnit;
 }) {
   const header = (key: SortKey, label: string, className?: string) => (
     <SortHeader
@@ -405,7 +430,6 @@ function Table({
         <thead>
           <tr className="border-b border-border text-left text-caption text-foreground-subtle">
             <th className="min-w-[11rem] px-4 py-3 font-medium sm:px-6">Item</th>
-            <th className="hidden px-3 py-3 font-medium lg:table-cell">Dealer</th>
             {header("date", "Purchased", "hidden lg:table-cell")}
             {header("weight", "Weight", "hidden sm:table-cell")}
             {header("cost", "Cost")}
@@ -447,22 +471,30 @@ function Table({
                   </p>
                 ) : null}
               </td>
-              <td className="hidden px-3 py-3 text-foreground-muted lg:table-cell">
-                {r.dealer ?? "—"}
-              </td>
-              <td className="hidden whitespace-nowrap px-3 py-3 text-right num text-foreground-muted lg:table-cell">
-                {r.purchaseDateLabel}
+              {/* Date with the dealer beneath it: one column instead of two. */}
+              <td className="hidden px-3 py-3 text-right text-foreground-muted lg:table-cell">
+                <span className="block whitespace-nowrap num">{r.purchaseDateLabel}</span>
+                {r.dealer ? (
+                  <span className="block max-w-[10rem] truncate text-caption text-foreground-subtle">
+                    {r.dealer}
+                  </span>
+                ) : null}
               </td>
               <td className="hidden whitespace-nowrap px-3 py-3 text-right num text-foreground-muted sm:table-cell">
-                {formatWeight(r.grams, "g")}
+                {formatWeight(r.grams, unit)}
                 {r.quantity > 1 ? (
                   <span className="block text-caption text-foreground-subtle">
-                    {r.quantity} × {formatWeight(r.grams / r.quantity, "g")}
+                    {r.quantity} × {formatWeight(r.grams / r.quantity, unit)}
                   </span>
                 ) : null}
               </td>
               <td className="whitespace-nowrap px-3 py-3 text-right num text-foreground">
                 {formatCurrency(r.cost, r.currency)}
+                <PremiumNote
+                  premium={r.premium}
+                  currency={r.currency}
+                  purchaseDateLabel={r.purchaseDateLabel}
+                />
               </td>
               <td className="hidden whitespace-nowrap px-3 py-3 text-right num text-foreground sm:table-cell">
                 {r.value !== null ? (
@@ -519,7 +551,7 @@ function Table({
 }
 
 /** Phone layout: one card per item; sorting still follows the filter state. */
-function MobileList({ rows }: { rows: HoldingRow[] }) {
+function MobileList({ rows, unit }: { rows: HoldingRow[]; unit: DisplayWeightUnit }) {
   return (
     <ul className="divide-y divide-border sm:hidden">
       {rows.map((r) => (
@@ -540,7 +572,7 @@ function MobileList({ rows }: { rows: HoldingRow[] }) {
                 ) : null}
               </p>
               <p className="text-caption text-foreground-muted num">
-                {[r.dealer, r.purchaseDateLabel, formatWeight(r.grams, "g")]
+                {[r.dealer, r.purchaseDateLabel, formatWeight(r.grams, unit)]
                   .filter(Boolean)
                   .join(" · ")}
               </p>
@@ -553,6 +585,11 @@ function MobileList({ rows }: { rows: HoldingRow[] }) {
             </div>
             <div className="shrink-0 text-right text-body-sm num">
               <p className="text-foreground">{formatCurrency(r.cost, r.currency)}</p>
+              <PremiumNote
+                premium={r.premium}
+                currency={r.currency}
+                purchaseDateLabel={r.purchaseDateLabel}
+              />
               {r.value !== null ? (
                 <p className="text-caption text-foreground-muted">
                   now {formatCurrency(r.value, r.currency)}
@@ -628,7 +665,17 @@ function SortHeader({
  * Totals for the visible rows. Money only adds up within one currency, so
  * the sums cover rows in the user's currency and say how many were left out.
  */
-function Totals({ rows, total, currency }: { rows: HoldingRow[]; total: number; currency: string }) {
+function Totals({
+  rows,
+  total,
+  currency,
+  unit,
+}: {
+  rows: HoldingRow[];
+  total: number;
+  currency: string;
+  unit: DisplayWeightUnit;
+}) {
   const inCurrency = rows.filter((r) => r.currency === currency);
   const sum = (pick: (r: HoldingRow) => number | null) =>
     inCurrency.reduce((acc, r) => acc + (pick(r) ?? 0), 0);
@@ -646,8 +693,8 @@ function Totals({ rows, total, currency }: { rows: HoldingRow[]; total: number; 
       <span className="font-medium text-foreground">
         {rows.length === total ? `${total} items` : `Showing ${rows.length} of ${total} items`}
       </span>
-      {grams("gold") > 0 ? <span>Gold held {formatWeight(grams("gold"), "g")}</span> : null}
-      {grams("silver") > 0 ? <span>Silver held {formatWeight(grams("silver"), "g")}</span> : null}
+      {grams("gold") > 0 ? <span>Gold held {formatWeight(grams("gold"), unit)}</span> : null}
+      {grams("silver") > 0 ? <span>Silver held {formatWeight(grams("silver"), unit)}</span> : null}
       <span>Cost {formatCurrency(cost, currency)}</span>
       <span>Value {formatCurrency(value, currency)}</span>
       <span className={plTone(pl)}>Total P/L {formatSignedCurrency(pl, currency)}</span>
