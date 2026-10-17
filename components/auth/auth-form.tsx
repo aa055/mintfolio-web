@@ -20,6 +20,8 @@ interface AuthFormProps {
   variant?: "primary" | "accent";
   passwordHint?: string;
   passwordMinLength?: number;
+  /** Ask for the user's name (signup). */
+  withName?: boolean;
 }
 
 function SubmitButton({
@@ -49,6 +51,7 @@ export function AuthForm({
   variant = "primary",
   passwordHint,
   passwordMinLength = 8,
+  withName = false,
 }: AuthFormProps) {
   const [state, formAction] = useActionState<AuthFormState, FormData>(
     action,
@@ -57,6 +60,21 @@ export function AuthForm({
 
   return (
     <form action={formAction} className="space-y-4">
+      {withName ? (
+        <div className="space-y-1.5">
+          <Label htmlFor="name">Your name</Label>
+          <Input
+            id="name"
+            name="name"
+            type="text"
+            autoComplete="name"
+            required
+            maxLength={200}
+            placeholder="Aisha Khan"
+          />
+        </div>
+      ) : null}
+
       <div className="space-y-1.5">
         <Label htmlFor="email">Email</Label>
         <Input
