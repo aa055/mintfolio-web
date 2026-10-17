@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import type { Route } from "next";
 
 import { apiFetch } from "@/lib/api-client";
+import { syncBody } from "@/lib/auth/sync";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -32,14 +33,14 @@ export async function loginAction(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     return { ok: false, error: error.message };
   }
 
   // Ensure backend rows exist. Idempotent — safe on every login.
   try {
-    await apiFetch("/auth/sync", { method: "POST", body: {} });
+    await apiFetch("/auth/sync", { method: "POST", body: syncBody(data.user) });
   } catch (err) {
     // Don't block login on sync failure — dashboard self-heals via GET /auth/me.
     console.error("[auth] /auth/sync failed during login:", err);
@@ -53,6 +54,10 @@ export async function signupAction(
   formData: FormData,
 ): Promise<AuthFormState> {
   const { email, password } = readForm(formData);
+  const name = String(formData.get("name") ?? "").trim().slice(0, 200);
+  if (!name) {
+    return { ok: false, error: "Please enter your name." };
+  }
   if (!email || !password) {
     return { ok: false, error: "Email and password are required." };
   }
@@ -65,7 +70,12 @@ export async function signupAction(
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: `${origin}/auth/callback?next=/dashboard` },
+    options: {
+      emailRedirectTo: `${origin}/auth/callback?next=/dashboard`,
+      // Kept by Supabase in user_metadata, so the name survives email
+      // confirmation and reaches /auth/sync from the callback too.
+      data: { full_name: name },
+    },
   });
   if (error) {
     return { ok: false, error: error.message };
@@ -75,7 +85,7 @@ export async function signupAction(
   // immediately and we can sync + send the user straight to the dashboard.
   if (data.session) {
     try {
-      await apiFetch("/auth/sync", { method: "POST", body: {} });
+      await apiFetch("/auth/sync", { method: "POST", body: syncBody(data.user) });
     } catch (err) {
       console.error("[auth] /auth/sync failed during signup:", err);
     }
