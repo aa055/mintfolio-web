@@ -259,10 +259,17 @@ The charts on Home and Rates depend on this, so it comes first.
   - **Weight unit applies everywhere:** all 9 places that format a weight use it, including "Avg cost / tola".
 
 ### Step 7: Dark mode
-- [ ] Find out why forcing the `.dark` class had no visible effect, and fix the tokens. Replace hard-coded brand classes (`bg-cornsilk-*`, `text-caramel-900`, …) with semantic tokens where needed.
-- [ ] Theme toggle in the avatar menu: Light / Dark / System, saved per device, with no flash on load.
-- [ ] Re-validate chart colors against the dark surface.
+- [x] Find out why forcing the `.dark` class had no visible effect, and fix the tokens. Replace hard-coded brand classes (`bg-cornsilk-*`, `text-caramel-900`, …) with semantic tokens where needed.
+- [x] Theme toggle in the avatar menu: Light / Dark / System, saved per device, with no flash on load.
+- [x] Re-validate chart colors against the dark surface.
 - **Done when:** every page is readable in both themes, checked with screenshots, and charts pass the palette validator in both.
+- **Result (2026-10-17):** done. Every app page passes a WCAG AA text-contrast scan in both themes, as do the login page and the sell dialog.
+  - **Root cause:** Tailwind tree-shakes CSS inside `@layer` when the class never appears in the source, and `dark` is only added at runtime. The whole dark palette was being dropped, so it now sits outside the layer.
+  - **Dark palette fixed:** red text was 2.7:1 and is now 5.3:1. Green was 4.3:1 and is now 5.6:1. Subtle text is now readable on tinted backgrounds.
+  - **Light accent fixed:** "Add purchase" was 3.8:1 and is now 4.9:1. The light accent darkened slightly, the gold chart colour is unchanged, and buttons darken on hover (lighten in dark mode) instead of washing out.
+  - **Chart value line:** the Home chart's value line gets its own colour. The brand olive read as grey and too close to the "invested" line, so both modes were re-validated with the dataviz checker.
+  - **No hard-coded colours remain:** every brand class and the dialog overlay now use theme tokens. A new `notice` token set covers warnings.
+  - **Theme switch:** Light / Dark / System in the avatar menu, saved per device and applied before first paint. Charts recolour live. Default is Light.
 
 ### Step 8: Polish + QA
 - [ ] Loading skeletons (`loading.tsx` per route), empty states on every page, and error boundaries.
