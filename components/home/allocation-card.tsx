@@ -128,9 +128,9 @@ export function SummaryNotices({ summary }: { summary: PortfolioSummary }) {
       {notes.map((note) => (
         <p
           key={note}
-          className="flex items-start gap-2 rounded-md border border-caramel-300 bg-caramel-50 px-3 py-2 text-body-sm text-caramel-900"
+          className="flex items-start gap-2 rounded-md border border-notice-border bg-notice px-3 py-2 text-body-sm text-notice-foreground"
         >
-          <CircleAlert className="h-4 w-4 shrink-0 translate-y-[2px] text-caramel-700" aria-hidden />
+          <CircleAlert className="h-4 w-4 shrink-0 translate-y-[2px] text-notice-icon" aria-hidden />
           <span>{note}</span>
         </p>
       ))}

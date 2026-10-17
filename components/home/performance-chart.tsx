@@ -159,7 +159,7 @@ export function PerformanceChart({
 
         <ul className="flex gap-4 text-caption text-foreground-muted" aria-label="Legend">
           <li className="flex items-center gap-1.5">
-            <span className="h-0.5 w-4 rounded-full bg-primary" aria-hidden />
+            <span className="h-0.5 w-4 rounded-full bg-[rgb(var(--chart-value))]" aria-hidden />
             Value
           </li>
           <li className="flex items-center gap-1.5">
@@ -213,9 +213,9 @@ export function PerformanceChart({
                     type="monotone"
                     dataKey="value"
                     name="Value"
-                    stroke={colors.primary}
+                    stroke={colors.value}
                     strokeWidth={2}
-                    fill={colors.primary}
+                    fill={colors.value}
                     fillOpacity={0.1}
                     activeDot={{ r: 4, strokeWidth: 2, stroke: colors.surface }}
                     isAnimationActive={false}
