@@ -30,11 +30,21 @@ function initials(user: MenuUser) {
   return ((parts[0]?.[0] ?? "") + (user.name ? (parts[1]?.[0] ?? "") : "")).toUpperCase() || "?";
 }
 
-export function UserAvatar({ user, className }: { user: MenuUser; className?: string }) {
+export function UserAvatar({
+  user,
+  className,
+  decorative = false,
+}: {
+  user: MenuUser;
+  className?: string;
+  /** Hide from assistive tech when a surrounding control already names it. */
+  decorative?: boolean;
+}) {
   return (
     <span
+      aria-hidden={decorative || undefined}
       className={cn(
-        "grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-primary/15 text-caption font-semibold text-primary",
+        "grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-primary/15 text-caption font-semibold text-foreground",
         className,
       )}
     >
@@ -59,12 +69,12 @@ export function UserMenu({ user }: { user: MenuUser }) {
   const [theme, setTheme] = useTheme();
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        aria-label="Account menu"
-      >
-        <UserAvatar user={user} />
+    // Non-modal: a modal menu hides the whole page from assistive tech while open.
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+        {/* The initials are decoration; the button's name is the text below. */}
+        <UserAvatar user={user} className="pointer-events-none" decorative />
+        <span className="sr-only">Account menu</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>

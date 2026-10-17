@@ -137,7 +137,7 @@ function PreferencesCard({ user, timezones }: { user: User; timezones: string[] 
           </div>
           <p className="text-caption text-foreground-subtle">
             Your name and photo are on your{" "}
-            <Link href="/profile" className="text-primary hover:underline">
+            <Link href="/profile" className="text-primary underline underline-offset-2">
               Profile
             </Link>
             .

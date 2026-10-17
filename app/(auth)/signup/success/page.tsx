@@ -18,7 +18,7 @@ export default function SignupSuccessPage() {
           <Mail className="h-5 w-5" strokeWidth={1.75} />
         </div>
         <CardTitle className="font-display text-h1 font-medium tracking-tight">
-          Check your email
+          <h1>Check your email</h1>
         </CardTitle>
         <CardDescription>
           We sent you a verification link. Click it to activate your account,

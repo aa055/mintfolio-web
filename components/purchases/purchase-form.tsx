@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { cloneElement, isValidElement, useId, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
@@ -358,7 +358,7 @@ export function PurchaseForm({
                 name="purchase_currency"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger aria-label="Currency"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {CURRENCIES.map((c) => (
                         <SelectItem key={c} value={c}>{c}</SelectItem>
@@ -375,7 +375,7 @@ export function PurchaseForm({
                 name="payment_method"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger aria-label="Payment method"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="cash">Cash</SelectItem>
                       <SelectItem value="card">Card</SelectItem>
@@ -465,7 +465,7 @@ export function PurchaseForm({
                       name={`items.${index}.metal`}
                       render={({ field: f }) => (
                         <Select value={f.value} onValueChange={f.onChange}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectTrigger aria-label={`Item ${index + 1} metal`}><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="gold">Gold</SelectItem>
                             <SelectItem value="silver">Silver</SelectItem>
@@ -484,7 +484,7 @@ export function PurchaseForm({
                           value={f.value || ""}
                           onValueChange={(v) => f.onChange(v)}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger aria-label={`Item ${index + 1} form`}>
                             <SelectValue placeholder="(optional)" />
                           </SelectTrigger>
                           <SelectContent>
@@ -530,7 +530,7 @@ export function PurchaseForm({
                         name={`items.${index}.weight_unit`}
                         render={({ field: f }) => (
                           <Select value={f.value} onValueChange={f.onChange}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectTrigger aria-label={`Item ${index + 1} weight unit`}><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="g">g</SelectItem>
                               <SelectItem value="kg">kg</SelectItem>
@@ -739,14 +739,31 @@ function Field({
   hint?: string;
   error?: string;
 }) {
+  // Link the label (and hint/error) to a directly wrapped Input/Textarea.
+  // Selects are named with aria-label at their call site instead.
+  const id = useId();
+  const noteId = `${id}-note`;
+  const note = error ?? hint;
+  const linkable = isValidElement(children) && (children.type === Input || children.type === Textarea);
+  const control = linkable
+    ? cloneElement(children as React.ReactElement<Record<string, unknown>>, {
+        id,
+        "aria-describedby": note ? noteId : undefined,
+        "aria-invalid": error ? true : undefined,
+      })
+    : children;
   return (
     <div className="space-y-1.5">
-      <Label>{label}</Label>
-      {children}
+      <Label htmlFor={linkable ? id : undefined}>{label}</Label>
+      {control}
       {error ? (
-        <p className="text-caption text-destructive">{error}</p>
+        <p id={noteId} className="text-caption text-destructive">
+          {error}
+        </p>
       ) : hint ? (
-        <p className="text-caption text-foreground-subtle">{hint}</p>
+        <p id={noteId} className="text-caption text-foreground-subtle">
+          {hint}
+        </p>
       ) : null}
     </div>
   );
