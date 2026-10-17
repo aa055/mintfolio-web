@@ -272,10 +272,26 @@ The charts on Home and Rates depend on this, so it comes first.
   - **Theme switch:** Light / Dark / System in the avatar menu, saved per device and applied before first paint. Charts recolour live. Default is Light.
 
 ### Step 8: Polish + QA
-- [ ] Loading skeletons (`loading.tsx` per route), empty states on every page, and error boundaries.
-- [ ] Accessibility pass: focus order, labels, contrast, `aria-current` on the active nav item.
-- [ ] Add a favicon (fixes the 404 on every page).
-- [ ] Move the end-to-end browser flows into the repo as a test suite.
+- [x] Loading skeletons (`loading.tsx` per route), empty states on every page, and error boundaries.
+- [x] Accessibility pass: focus order, labels, contrast, `aria-current` on the active nav item.
+- [x] Add a favicon (fixes the 404 on every page).
+- [x] Move the end-to-end browser flows into the repo as a test suite.
+- **Result (2026-10-17):** done.
+  - **Loading and errors:** every app page has a loading placeholder shaped like its content. There's an in-shell error screen with "Try again", and a branded 404.
+  - **Accessibility:** axe-core (WCAG 2.1 A/AA + best practice) now reports **0 violations** on all pages in both themes. The fixes:
+    - Purchase-form labels are linked to their inputs, and its dropdowns are named.
+    - Login and signup have real `h1` headings.
+    - The account-menu button's name matches what it shows.
+    - The Settings link is underlined.
+    - Avatar initials and placeholder text meet contrast.
+    - The account menu is non-modal, so it no longer hides the page from screen readers.
+  - **Favicon:** `app/icon.svg`.
+  - **Tests:** `npm run test:e2e` runs 40 Playwright tests (see `e2e/README.md`) and all pass. Each run creates a throwaway user and deletes it afterwards.
+  - **Next.js upgrade:** 15.5.18 → 15.5.28, clearing critical security advisories (remote code execution, among others). The remaining `npm audit` warnings are in build/lint tooling and need Next 16 to clear.
+
+## UI/UX revamp: complete
+
+All eight steps are done. What's left for launch is outside this plan: deployment (API host region near the database, Vercel, production auth redirect URLs) and the follow-ups below.
 
 ## 7. Follow-ups (not in this plan)
 
