@@ -80,7 +80,7 @@ sequenceDiagram
 npx playwright install chromium        # once
 copy .env.e2e.example .env.e2e         # once; set SUPABASE_SERVICE_ROLE_KEY
 # start the API and npm run dev, then:
-npm run test:e2e                       # all, ~5–10 min against the Sydney DB
+npm run test:e2e                       # all, a few minutes against the Singapore DB
 npx playwright test e2e/home.spec.ts   # one file
 npx playwright show-report             # HTML report, with traces of failures
 ```
