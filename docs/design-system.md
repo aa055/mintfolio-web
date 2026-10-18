@@ -2,6 +2,8 @@
 
 This document is the single source of truth for visual decisions. Tailwind config, `globals.css`, and component variants must all derive from the tokens defined here.
 
+> **Note (Oct 2026):** the palette, type and spacing rules below still apply. The **exact token values** were re-tuned for WCAG AA contrast in both themes during the dark-mode and QA work (Steps 7–8 of [ui-ux-plan.md](ui-ux-plan.md)). Chart, notice and hover tokens were also added. For current values, **`app/globals.css` wins** over the tables here. How tokens flow into components: [architecture.md §6](architecture.md#6-theming).
+
 ---
 
 ## 1. Design Principles

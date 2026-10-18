@@ -2,7 +2,20 @@
 
 Frontend for **Mintfolio** — a portfolio management platform for physical precious metals.
 
-This repo is the Next.js client. It handles auth UI, the dashboard, holdings management, and receipt uploads. All data flows through the FastAPI service in [`mintfolio-api`](https://github.com/aamir/mintfolio-api). The frontend never talks to Supabase tables directly.
+This repo is the Next.js client. It handles auth UI, the dashboard, holdings management, and receipt uploads. All data flows through the FastAPI service in [`mintfolio-api`](https://github.com/aa055/mintfolio-api). The frontend never talks to Supabase tables directly.
+
+## Documentation
+
+| Doc | What's in it |
+|---|---|
+| [docs/README.md](docs/README.md) | Index of this repo's docs |
+| [docs/architecture.md](docs/architecture.md) | Routes, data fetching, server actions, auth, uploads, theming |
+| [docs/ui-ux.md](docs/ui-ux.md) | Every screen, responsive layout, states, accessibility |
+| [docs/development.md](docs/development.md) | Setup, scripts, e2e tests, Vercel deploy |
+| [docs/design-system.md](docs/design-system.md) | Colours, type, spacing |
+| [docs/ui-ux-plan.md](docs/ui-ux-plan.md) | The completed UI/UX revamp plan and results |
+
+Project-wide docs (PRD/FRD, cross-repo architecture, database operations, deployment, testing, status and plan) live in the **[mintfolio-docs](https://github.com/aa055/mintfolio-docs)** repo. Start at its [docs/README.md](https://github.com/aa055/mintfolio-docs/blob/main/docs/README.md).
 
 ---
 
@@ -15,12 +28,11 @@ This repo is the Next.js client. It handles auth UI, the dashboard, holdings man
 | Styling | Tailwind CSS 3 |
 | Components | shadcn/ui (custom theme) |
 | Forms | react-hook-form + zod |
-| Server state | TanStack Query |
-| Client state | Zustand (used sparingly) |
+| Data fetching | Server Components + Server Actions (TanStack Query / Zustand installed, unused) |
 | Charts | Recharts |
 | Icons | lucide-react |
 | Auth client | `@supabase/supabase-js` (session only) |
-| Hosting | Vercel |
+| Hosting | Vercel (planned; not deployed yet) |
 
 See [`docs/design-system.md`](./docs/design-system.md) for the visual system — color tokens, typography scale, spacing, and component defaults.
 
@@ -54,20 +66,25 @@ See [`.env.example`](./.env.example). You'll need:
 
 ```
 app/                      App Router pages
-  layout.tsx              Root layout + font setup
-  globals.css             Theme tokens + base styles
+  layout.tsx              Root layout, fonts, theme init script
+  globals.css             Theme tokens (light + dark) + base styles
   page.tsx                Marketing landing page
-  (auth)/                 Login, signup, forgot-password (to be added)
-  (app)/                  Authenticated dashboard area (to be added)
+  (auth)/                 Login, signup, signup/success
+  (app)/                  Signed-in area: dashboard (Home), holdings, transactions,
+                          purchases/new|[id]|[id]/edit, rates, profile, settings
+  auth/callback/          OAuth + email-confirmation code exchange
 components/
-  ui/                     Base primitives (button, card, ...)
-  dashboard/              Dashboard widgets (to be added)
+  ui/                     Base primitives (button, card, dialog, select, ...)
+  shell/                  Sidebar, tab bar, avatar menu, skeletons
+  home/ holdings/ transactions/ purchases/ rates/ profile/ settings/ auth/
 lib/
-  utils.ts                cn(), formatCurrency, formatPercent, formatWeight
-  api-client.ts           (to be added) Fetch wrapper with Supabase JWT
-  supabase.ts             (to be added) Browser-side auth client
-docs/
-  design-system.md        Visual system source of truth
+  api-client.ts           apiFetch(): server-side fetch with the Supabase JWT
+  api-types.ts            TypeScript mirror of the API schemas
+  */actions.ts            Server actions (purchases, sales, settings, profile, auth)
+  supabase/               Session clients + middleware helper
+  utils.ts                cn(), formatCurrency, formatWeight, ...
+e2e/                      Playwright + axe end-to-end suite
+docs/                     See "Documentation" above
 ```
 
 ---
